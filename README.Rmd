@@ -1,6 +1,6 @@
-## Cosumnes River Groundwater Observatory  
+# Cosumnes River Groundwater Observatory  
 
-Log of Research activities  
+**Log of Research activities**  
 
 ***
 
@@ -38,6 +38,10 @@ February 22, 2018
 * found these resources in setting up an automated task in Windows  
     + [Stack Overflow question](https://stackoverflow.com/questions/2793389/scheduling-r-script)  
     + [blog post](https://www.techradar.com/news/software/applications/how-to-automate-tasks-in-windows-1107254)  
+* Talked with Omen (IT) and named project mySQL database "gw-observatory"  
+    + cost is $0 to set up the database, and $39/hr to pay a developer to build the application.  
+    + Rich will build the application, so the cost will be free.  
+
 
 TO DO:  
 
@@ -45,14 +49,13 @@ TO DO:
     + change the reporting interval from 6 hour intervals to 24 hour intervals to save battery life  
     + read up on strings to prepare for cleaning SQLite data  
 * Rich:  
-    + follow up with Chris  
     + set up the remote DB  
+    + perform load tests on Shiny App -  aim to account for 10 years of hourly data.  
 
 ***
 
 February 23, 2018  
 
-* Talked with Omen (IT) and named project mySQL database "gw-observatory"  
 
 
 
