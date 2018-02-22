@@ -38,9 +38,12 @@ February 22, 2018
 * found these resources in setting up an automated task in Windows  
     + [Stack Overflow question](https://stackoverflow.com/questions/2793389/scheduling-r-script)  
     + [blog post](https://www.techradar.com/news/software/applications/how-to-automate-tasks-in-windows-1107254)  
-* Talked with Omen (IT) and named project mySQL database "gw-observatory"  
+* Talked with Omen (IT) and named project mySQL database "**gw_observatory**"  
     + cost is $0 to set up the database, and $39/hr to pay a developer to build the application.  
     + Rich will build the application, so the cost will be free.  
+    + The host is sage.metro.ucdavis.edu  
+    + The schema name is gw_observatory  
+    + password is not displayed for security purposes  
 
 
 TO DO:  
