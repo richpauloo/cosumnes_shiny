@@ -19,19 +19,19 @@ shinyUI(
              target="_blank"))
       ),
       mainPanel(
-        img(src='logo.png'),
+        #img(src='logo.png'),
         tabsetPanel(
           
-          tabPanel("plots",
-                   plotOutput("plot")
+          tabPanel("map",
+                   leafletOutput("map")
           ),
           
           tabPanel("data",
                    DT::dataTableOutput("data_table")
           ),
           
-          tabPanel("map",
-                   leafletOutput("map")
+          tabPanel("plots",
+                   plotOutput("plot")
           )
           
         )
