@@ -1,10 +1,6 @@
----
-title: "research log"
-output: html_notebook
-author: Rich Pauloo
----
+## Cosumnes River Groundwater Observatory  
 
-In this document, I'll keep a log of my activities so it's easy to follow what happened.  
+Log of Research activities  
 
 ***
 
