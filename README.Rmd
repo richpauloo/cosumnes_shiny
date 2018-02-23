@@ -66,8 +66,10 @@ TO DO:
 
 February 23, 2018  
 
-
-
+* Asked System Admin to add shinyapps.io IP addresses to mySQL databse whitelist.  
+    + [RStudio Support](https://support.rstudio.com/hc/en-us/articles/217592507-How-do-I-give-my-application-on-shinyapps-io-access-to-my-remote-database-#)  
+    + [Pool documentation](https://cran.r-project.org/web/packages/pool/pool.pdf)  
+    + [Databases in R](http://db.rstudio.com/pool/)  
 
     
 
