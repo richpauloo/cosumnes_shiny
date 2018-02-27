@@ -4,8 +4,9 @@ shinyServer(function(input, output, session) {
   
   output$plot <- renderPlot({
     
-    ggplot(cs_hydro_long) +
-      geom_line(aes(x=Date, y = head, color = well)) + theme_cowplot()
+    grouped_heads %>% 
+      ggplot() + geom_line(aes(x = Date, y = mean)) + 
+      geom_ribbon(aes(x = Date, ymin = min, ymax = max), alpha = 0.2)
     
   })
   
@@ -31,3 +32,6 @@ shinyServer(function(input, output, session) {
   })
   
 })
+
+
+

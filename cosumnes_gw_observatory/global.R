@@ -1,29 +1,41 @@
 library(shiny)
-library(googlesheets)
+library(RMySQL)
 library(DT)
 library(tidyverse)
 #library(tibbletime)
 library(stringr)
 library(cowplot)
 library(data.table)
-library(googlesheets)
 library(leaflet)
 
-cs_key <- extract_key_from_url("https://docs.google.com/spreadsheets/d/1PGvaPn4wqXb02bnujJ31edoleVYJFnpL4OsP_tcXSeU/edit#gid=0")
+cs_coords <- data_frame(lat = c(38.30139, 38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101), 
+                        long = c(-121.378, -121.379, -121.381, -121.369, -121.374, -121.379, -121.379, -121.382, -121.391, -121.391, -121.376, -121.384, -121.382, -121.384), 
+                        well = c("MW14", "MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13"))
 
-cs_ss <- gs_key(cs_key)
+# connect to mySQL db
+con <- dbConnect(RMySQL::MySQL(), 
+                 user = "gw_observatory",
+                 password = "",
+                 host = "sage.metro.ucdavis.edu",
+                 dbname = "gw_observatory")
 
-#cs_hydro <- gs_read(cs_ss, ws = "hydrographs")
-cs_coords <- gs_read(cs_ss, ws = "coords")
 
-# gather the data so it's easy to plot
-#cs_hydro_long <- gather(cs_hydro, well, head, -time)
+# query mySQL db
+df <- dbReadTable(con, "test")
 
-# read in data from github
-df <- fread('https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/cosumnes_gw_observatory/AllData.csv')
+# fix dates
+dates <- as.POSIXct( strptime(df$Date, format = '%Y-%m-%d %H:%M:%S') ) # format changes between mySWL writing and reading
 
-as_data_frame(df) -> df
-
-df$Date <- as.POSIXct(strptime(df$Date, "%m/%d/%Y %H:%M:%S"))
-
+# reorganize 
 cs_hydro_long <- gather(df, well, head, -Date)
+
+cs_hydro_long$Date <- dates # recycling makes this work
+
+
+# scratch
+grouped_heads <- cs_hydro_long %>% 
+  group_by(Date) %>% 
+  summarise(mean = mean(head, na.rm = TRUE), 
+            min = min(head, na.rm = TRUE), 
+            max = max(head, na.rm = TRUE)) 
+

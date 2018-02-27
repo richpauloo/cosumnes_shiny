@@ -73,7 +73,15 @@ February 23, 2018
 
     
 
+***
 
+February 23, 2018  
+
+* was blocked from accessing mySQL server, so asked Omen to whitelist my IP and Amy's IP  
+* wrote some dummy data to the mySQL server large enough for a load test (about 2 years of data for 13 wells)  
+* created a minimal ShinyApp to query and load test the mySQL database  
+    + query: works well  
+    + load test: works well--size of data is not a problem  
 
 
 

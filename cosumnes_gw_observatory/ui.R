@@ -4,22 +4,19 @@ library(leaflet)
 
 shinyUI(
   fluidPage(
-    titlePanel("Cosumnes River Groundwater Observatory"),
+    titlePanel(img(src='logo.png', width = 200)),
     
     sidebarLayout(
       sidebarPanel(
-        h6(paste("This app is hard-wired to read a single, public Google",
-                 "Sheet.")),
-        h6("Visit the Sheet in the browser:", a("HERE", href = gs_gap_url(),
-                                                target="_blank")),
-        h6(paste("Since there is no user input, it defaults to reading",
-                 "the first worksheet in the spreadsheet.")),
+        h4("Cosumnes River Groundwater Observatory"),
+        h6(paste("This app is updated daily, and displays real-time data from the Cosumnes",
+                 "River Groundwater Observatory. Data is collected telemetrically at hourly intervals.")),
         h6(a("Click Here to See Code on Github",
-             href="https://github.com/jennybc/googlesheets/tree/master/inst/shiny-examples/01_read-public-sheet",
+             href="https://github.com/richpauloo/cosumnes_shiny",
              target="_blank"))
+        
       ),
       mainPanel(
-        #img(src='logo.png'),
         tabsetPanel(
           
           tabPanel("map",
