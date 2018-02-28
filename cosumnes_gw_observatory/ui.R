@@ -1,7 +1,3 @@
-library(shiny)
-library(googlesheets)
-library(leaflet)
-
 shinyUI(
   fluidPage(
     titlePanel(img(src='logo.png', width = 200)),

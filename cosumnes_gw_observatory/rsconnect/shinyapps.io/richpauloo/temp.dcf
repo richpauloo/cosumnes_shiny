@@ -1,0 +1,13 @@
+name: temp
+title: temp
+username:
+account: richpauloo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 289012
+bundleId: 1243193
+url: https://richpauloo.shinyapps.io/temp/
+when: 1519760203.86753
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: AllData.csv|scratch/clean_me.csv

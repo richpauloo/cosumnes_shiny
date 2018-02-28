@@ -75,14 +75,39 @@ February 23, 2018
 
 ***
 
-February 23, 2018  
+February 26, 2018  
 
 * was blocked from accessing mySQL server, so asked Omen to whitelist my IP and Amy's IP  
 * wrote some dummy data to the mySQL server large enough for a load test (about 2 years of data for 13 wells)  
 * created a minimal ShinyApp to query and load test the mySQL database  
     + query: works well  
     + load test: works well--size of data is not a problem  
+* uploaded to shinyapps.io, and get the following error:  
+    + `An error has occurred. Unable to connect to worker after 60.00 seconds; startup took too long.`  
 
+
+***
+
+February 27, 2018  
+
+* Troubleshooting--it works locally, but not online because:  
+    + data is too big, or memory needed > 1GB, and I need to upgrade to a Shiny Apps plan  
+        + test with small data (USArrests) -- same error as before.  
+        + not size or memory limited  
+    + [try using ROCBC package](http://docs.rstudio.com/shinyapps.io/applications.html#config-package)  
+        + not relevant  
+    + check out the `config` package  
+        + not relevant  
+    + try `pool` package  
+        + same error  
+    + shinyapps.io IP addresses are not whitelited  
+        + confirm they are whitelisted with Omen  
+    + Stack Overflow  
+        + posted  
+    + shiny apps google group  
+        + posted  
+    
+    
 
 
 
