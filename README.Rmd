@@ -108,7 +108,14 @@ February 27, 2018
         + posted  
     
     
+***
 
+February 28, 2018  
+
+* Successfully deployed app on shinyapps.io and resolved connection issue with campus MySQL server  
+    + issue was that we needed to create a port to the database--metro has a burly firewall  
+
+***
 
 
 
