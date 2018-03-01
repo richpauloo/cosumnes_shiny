@@ -18,7 +18,7 @@ cs_coords <- data_frame(lat = c(38.30139, 38.31263, 38.30505, 38.30488, 38.29666
 # connect to mySQL db
 con <- dbConnect(RMySQL::MySQL(),
                  user = "gw_observatory",
-                 password = "",
+                 password = "ceu9chaiCai3ieb8Kiesh5",
                  host = "169.237.35.237",
                  dbname = "gw_observatory",
                  port = 33306)
@@ -28,7 +28,7 @@ con <- dbConnect(RMySQL::MySQL(),
 #   dbname = "gw_observatory",
 #   host = "sage.metro.ucdavis.edu",
 #   username = "gw_observatory", 
-#   password = "ceu9chaiCai3ieb8Kiesh5"
+#   password = ""
 # )
 # onStop(function() {
 #   poolClose(pool)
