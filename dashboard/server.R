@@ -9,17 +9,25 @@ observeEvent(input$location, {
     }
 })
 
+# leaflet output of wells
 output$Map <- renderLeaflet({
 	leaflet() %>% addProviderTiles("CartoDB.Positron") %>% setView(lng=-121.378, lat=38.30139, zoom=13) %>%
 		addCircleMarkers(data=cs_coords, 
 		                 stroke=FALSE, 
 		                 fillOpacity=0.5, 
 		                 radius = 5,
-		                 layerId = ~Location,
-		                 popup = paste("Well ID: ", cs_coords$Location, "<br>",
-		                               "Latitude: ", cs_coords$lat, "<br>",
-		                               "Longitude: ", cs_coords$long, "<br>",
-		                               "Battery: ", paste0(cs_coords$battery, "%") ) 
+		                 layerId = ~Location, 
+		                 label = ~hover_text,
+		                 labelOptions = labelOptions(
+		                   offset = c(-50,-105),
+		                   #direction='bottom',
+		                   textOnly = T,
+		                   style=list(
+		                     'background'='rgba(255,255,255,0.95)',
+		                     'border-color' = 'rgba(0,0,0,1)',
+		                     'border-radius' = '4px',
+		                     'border-style' = 'solid',
+		                     'border-width' = '4px'))
 		                 )
 })
 
@@ -40,80 +48,146 @@ observeEvent(input$Map_marker_click, {
 	}
 })
 
+# when a location is chosen in the drop down menu, change the map popup
 observeEvent(input$location, {
 	p <- input$Map_marker_click
-	p2 <- subset(cs_coords, Location==input$location)
+	p2 <- cs_coords %>% filter(Location==input$location)
 	if(nrow(p2)==0){
 		leafletProxy("Map") %>% removeMarker(layerId="Selected")
 	} else if(is.null(p$id) || input$location!=p$id){
-		leafletProxy("Map") %>% setView(lng=p2$Lon, lat=p2$Lat, input$Map_zoom) %>% addCircleMarkers(p2$Lon, p2$Lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected")
+		leafletProxy("Map") %>% setView(lng=p2$lng, lat=p2$lat, input$Map_zoom) %>% addCircleMarkers(p2$lng, p2$lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected")
 	}
 })
 
-Dec <- reactive({
-	x <- sort(as.numeric(substr(input$dec, 1, 4)))
-	if(any(is.na(x))) return(NULL) else return(c("1960-1989", paste(x, x+9, sep="-")))
-})
-nDec <- reactive({ length(Dec()) })
-Colors <- reactive({ if(input$variable=="Temperature" & nDec()) c("#666666", colorRampPalette(c("gold", "orange", "orangered", "darkred"))(nDec()-1)) else c("#666666", colorRampPalette(c("aquamarine", "dodgerblue4"))(nDec()-1)) })
-RCPLabel <- reactive({ switch(input$rcp, "4.5 (low)"="Low-Range Emissions (RCP 4.5)", "6.0 (medium)"="Mid-Range Emissions (RCP 6.0)", "8.5 (high)"="High-Range Emissions (RCP 8.5)") })
-Unit <- reactive({ if(input$variable=="Temperature") paste0("°", substr(input$units, 1, 1)) else substr(input$units, 4, 5) })
-Min <- reactive({ if(input$variable=="Temperature") NULL else 0 })
 
-CRU_loc <- reactive({ subset(well_dat, Location==input$location) })
 
-# CRU_loc <- reactive({ subset(d.cru32, Location==input$location) })
-# CRU_var <- reactive({ subset(CRU_loc(), Var==input$variable) })
-
-# d0 <- reactive({
-# 	if(input$variable=="Temperature" | input$variable=="Precipitation" ){
-# 		if(!exists("d")){
-# 			prog <- Progress$new(session, min=0, max=1)
-# 			on.exit(prog$close())
-# 			prog$set(message="Loading data...", value=1)
-# 			load(paste0("cc4lite_2km_plus_NT10min.RData"), envir=.GlobalEnv)
-# 		}
-# 		return(d)
-# 	}
-# })
-# d1_loc <- reactive({ subset(d0(), Location==input$location) })
-# d2_var <- reactive({ subset(d1_loc(), Var==input$variable) })
-# d3_scen <- reactive({
-# 	x <- rbind(CRU_var(), subset(d2_var(), Scenario==substr(RCPLabel(), nchar(RCPLabel())-7, nchar(RCPLabel())-1)))
-# 	if(input$units=="Fin") { if(input$variable=="Temperature") { x[,6:7] <- x[,6:7]*(9/5) + 32 } else x[,6:7] <- x[,6:7]/25.4 }
-# 	x
-# })
-# d4_dec <- reactive({ if(is.null(d3_scen())) NULL else subset(d3_scen(), Decade %in% Dec()) })
-
-d3_scen <- reactive({
-  	x <- rbind(CRU_loc(), )
-  	if(input$units=="Fin") { if(input$variable=="Temperature") { x[,6:7] <- x[,6:7]*(9/5) + 32 } else x[,6:7] <- x[,6:7]/25.4 }
-  	x
+# when the location changes, so does the data for the plot
+location <- reactive({ 
+  well_dat_short %>% gather(wells, value, -Date) %>% 
+    filter(wells == input$location)
 })
 
-d4_dec <- reactive({ if(is.null(d3_scen())) NULL else subset(d3_scen(), Decade %in% Dec()) })
 
-
-output$Chart1 <- renderChart2({
-	if(is.null(d4_dec())) return(Highcharts$new())
-	if(!length(input$location) || input$location=="") return(Highcharts$new())
-	if(!length(input$dec) || input$dec=="") return(Highcharts$new())
-	p <- Highcharts$new()
-	p$colors(Colors())
-	p$title(text=paste("Average Monthly", input$variable, "for", input$location), style=list(color="#000000"))
-	p$subtitle(text=paste("Historical CRU 3.2 and 5-Model Projections using", RCPLabel()), style=list(color="gray"))
-	#p$legend(verticalAlign="top", y=50, itemStyle=list(color="gray"))
-	p$xAxis(categories=month.abb)
-	p$yAxis(title=list(text=paste0(input$variable, " (", Unit(), ")"), style=list(color="gray")), min=Min())
-	d <- d4_dec()[5:7]
-	ddply(d, .(Decade), function(x) {
-		g <- unique(x$Decade); x$Decade <- NULL; json <- toJSONArray2(x, json=F, names=F)
-		p$series(data=json, name=g, type="columnrange")
-		return(NULL)
-	})
-	p$exporting(enabled=F, scale=4)
-	p$set(height=400)
-	p
+location_units <- reactive({
+  temp <- location()
+  if(input$units == "feet") return(cbind.data.frame(Date = temp[,1], value = (temp[,3]) * 3.28084)) else return(temp) 
 })
+  
+
+
+# individual well plot
+output$Chart1 <- renderPlotly({
+  if(!length(input$location) || input$location=="") return(plotly()) # blank until a location is selected
+  
+  # plot
+  location_units() %>% 
+    plot_ly(x = ~Date) %>%
+    add_lines(y = ~value, name = input$location) %>% 
+    layout(
+      title = paste0("Monitoring Well ID: ", input$location),
+      xaxis = list(
+        rangeselector = list(
+          buttons = list(
+            list(
+              count = 3,
+              label = "3 mo",
+              step = "month",
+              stepmode = "backward"),
+            list(
+              count = 6,
+              label = "6 mo",
+              step = "month",
+              stepmode = "backward"),
+            list(
+              count = 1,
+              label = "1 yr",
+              step = "year",
+              stepmode = "backward"),
+            list(
+              count = 1,
+              label = "YTD",
+              step = "year",
+              stepmode = "todate"),
+            list(step = "all"))),
+        
+        rangeslider = list(type = "date")),
+      
+      yaxis = list(title = paste0("Level (", input$units, ")"))) %>% 
+    config(displayModeBar = FALSE)
+})
+
+
+# map for all wells
+output$network <- renderPlotly({
+  # gather data and get geom_smooth line from it
+  temp <- NA
+  ifelse(input$units_2 == "meters", 
+         temp <- well_dat_short, 
+         temp <- cbind.data.frame(Date = well_dat_short[,1], (well_dat_short[,-1]) * 3.28084))
+  
+  temp %>% 
+    gather(wells, level, -Date) %>% 
+    qplot(Date, level, data = .) + stat_smooth() -> p
+  
+  # get geom_smooth coords 
+  ggplot_build(p)$data[[2]] %>% select(x,y,ymin,ymax) -> smooth
+  
+  #smooth$x <- as.Date(as.POSIXct(smooth$x, origin="1970-01-01"))
+  smooth$x <- anytime(smooth$x)
+  
+  # plot 
+  plot_ly(temp, x = ~Date) %>%
+    add_lines(y = ~MW2, name = "MW2", color= I("gray50")) %>%
+    add_lines(y = ~MW9, name = "MW9", color= I("gray50")) %>%
+    add_lines(y = ~MW11, name = "MW11", color= I("gray50")) %>%
+    add_lines(y = ~MW20, name = "MW20", color= I("gray50")) %>%
+    add_lines(y = ~OnetoAg, name = "OnetoAg", color= I("gray50")) %>%
+    add_lines(y = ~MW19, name = "MM19", color= I("gray50")) %>%
+    add_lines(y = ~MW23, name = "MW23", color= I("gray50")) %>%
+    add_lines(y = ~MW22, name = "MW22", color= I("gray50")) %>%
+    add_lines(y = ~MW7, name = "MW7", color= I("gray50")) %>%
+    add_lines(y = ~MW5, name = "MW5", color= I("gray50")) %>%
+    add_lines(y = ~MW3, name = "MW3", color= I("gray50")) %>%
+    add_lines(y = ~MW17, name = "MW17", color= I("gray50")) %>%
+    add_lines(y = ~MW13, name = "MW13", color= I("gray50")) %>%
+    add_ribbons(data = smooth, x=~x, ymin=~ymin, ymax=~ymax, color = I("gray80"), name = "Confidence Interval") %>% 
+    add_lines(data = smooth, x=~x, y=~y, color = I("red"), name = "AVERAGE") %>% 
+    layout(
+      showlegend = FALSE,
+      title = "Entire Monitoring Well Network",
+      xaxis = list(
+        rangeselector = list(
+          buttons = list(
+            list(
+              count = 3,
+              label = "3 mo",
+              step = "month",
+              stepmode = "backward"),
+            list(
+              count = 6,
+              label = "6 mo",
+              step = "month",
+              stepmode = "backward"),
+            list(
+              count = 1,
+              label = "1 yr",
+              step = "year",
+              stepmode = "backward"),
+            list(
+              count = 1,
+              label = "YTD",
+              step = "year",
+              stepmode = "todate"),
+            list(step = "all"))),
+        
+        #rangeslider = list(type = "date")),
+        range = c( input$date_range[1], input$date_range[2])),
+        rangeslider(list(type="date")),
+      
+      yaxis = list(title = paste0("Level (", input$units_2, ")"))
+    ) %>% 
     
+    config(displayModeBar = FALSE)
+})
+
 })

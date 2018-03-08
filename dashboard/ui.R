@@ -1,6 +1,7 @@
-shinyUI(navbarPage(theme=shinytheme("cosmo"),
-	title=HTML('<div><a href="http://snap.uaf.edu" target="_blank"><img src="./img/SNAP_acronym_100px.png" width="80%"></a></div>'),
+shinyUI(navbarPage(theme=shinytheme("spacelab"), 
+	title=HTML('<div><a href="http://ucwater.org/" target="_blank"><img src="./img/small_logo.png" width="80%"></a></div>'),
 	tabPanel("Hydrographs", value="commChart"),
+	tabPanel("Network", value="network"),
 	tabPanel("About", value="about"),
 	windowTitle="CC4L",
 	collapsible=TRUE,
@@ -9,32 +10,28 @@ shinyUI(navbarPage(theme=shinytheme("cosmo"),
 	tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
 	conditionalPanel("input.tsp=='commChart'",
 	fluidRow(
-		column(4, h2("American River Groundwater Observatory")),
+		column(4, h4("California Groundwater Observatory"), h6("Real-time aquifer monitoring in the South American Subbasin")),
 		column(8,
 			fluidRow(
-				column(6, selectInput("location", "Well ID", c("", cs_coords$Location), selected="", multiple=F, width="100%")),
+				column(6, selectInput("location", "Monitoring Well ID", c("", colnames(well_dat_short)[-1]), selected="", multiple=F, width="100%")),
 				column(6, selectInput("units", "Units", c("meters", "feet"), selected="meters", multiple=F, width="100%"))
-			)#,
-			# fluidRow(
-			# 	column(4, selectInput("variable", "Climate Variable", c("Temperature", "Precipitation"), selected="Temperature", multiple=F, width="100%")),
-			# 	column(4, selectInput("units", "Units", c("C, mm", "F, in"), selected="C, mm", multiple=F, width="100%")),
-			# 	column(4, selectInput("rcp", "RCP", c("4.5 (low)", "6.0 (medium)", "8.5 (high)"), selected="6.0 (medium)", multiple=F, width="100%"))
-			# )
+			)
 		)
 	),
-	bsTooltip("location", "Enter a community. The menu will filter as you type. You may also select a community using the map.", "top", options = list(container="body")),
-	bsTooltip("dec", "Select decades for projected climate. A 30-year historical baseline is automatically included in the plot.", "top", options = list(container="body")),
-	bsTooltip("rcp", "Representative Concentration Pathways, covering a range of possible future climates based on atmospheric greenhouse gas concentrations.", "top", options = list(container="body")),
+	bsTooltip("location", "Enter a monitoring well ID. The menu will filter as you type. You may also select a monitoring well using the map.", "top", options = list(container="body")),
+	
+	
+	
 	fluidRow(
 	column(4, leafletOutput("Map")),
 	column(8,
-		showOutput("Chart1", "highcharts"),
+		plotlyOutput("Chart1"),
 		HTML('<style>.rChart {width: 100%; height: "auto"}</style>')
 	)
 	),
 	br(),
 	fluidRow(
-		column(2, actionButton("help_loc_btn", "About communities", class="btn-block"), br()),
+		column(2, actionButton("help_loc_btn", "About Wells", class="btn-block"), br()),
 		column(2, actionButton("help_rcp_btn", "About RCPs", class="btn-block")),
 		column(8, h5(HTML(paste(caption, '<a href="http://snap.uaf.edu" target="_blank">snap.uaf.edu</a>'))))
 	),
@@ -79,5 +76,24 @@ shinyUI(navbarPage(theme=shinytheme("cosmo"),
 		More information on these RCPs can be found in the 2014 IPCC fifth Assessment Report.'
 	))
 	),
+	conditionalPanel("input.tsp=='network'", 
+	fluidRow(
+	  
+	  column(4, h4("California Groundwater Observatory"), h6("Real-time aquifer monitoring in the South American Subbasin")),
+	  column(8,
+	         fluidRow(
+	           column(6, dateRangeInput("date_range", "Date Range", start = min(well_dat_short$Date), end = max(well_dat_short$Date), width="100%")),
+	           column(6, selectInput("units_2", "Units", c("meters", "feet"), selected="meters", multiple=F, width="100%"))
+	         )
+	  )
+	),
+	bsTooltip("location", "Enter a monitoring well ID. The menu will filter as you type. You may also select a monitoring well using the map.", "top", options = list(container="body")),
+	
+	fluidRow(
+	  column(12, plotlyOutput("network"))
+	  )
+	)
+	#plotlyOutput("network"))
+	,
 	conditionalPanel("input.tsp=='about'", source("about.R",local=T)$value)
 ))

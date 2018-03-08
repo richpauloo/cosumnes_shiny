@@ -135,9 +135,28 @@ March 7, 2018
     + map to click on  
 * spent time looking at CCLite4 apps and reading code  
 * brainstorming of app features  
+* try to find workaround without rCharts  
+* implemented well locations into cclite4 app  
 
+***
     
-    
+March 8, 2018  
+
+* performed load test on highcharts and plotly for group plot.  
+    + Plotly much faster, easily scalable to daily measurements at 15 wells over 5 years in ~20 seconds  
+    + plotly doesn't requre xts data types, as highchart does  
+* 
+
+
+
+
+
+
+
+
+
+
+
     
     
     
