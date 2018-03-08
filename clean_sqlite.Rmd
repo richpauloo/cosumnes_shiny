@@ -29,6 +29,7 @@ d %>%
 
 Work on extracting a table from the Body
 ```{r}
-test %>% tidyr::separate(Body, as.character(seq(1:100)), sep = "[\\r\\n]") %>% View()
+test %>% tidyr::separate(Body, as.character(seq(1:1000)), sep = "[\\r\\n]") %>% write_csv("test.csv")
+getwd()
 ```
 

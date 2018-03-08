@@ -124,4 +124,20 @@ March 6, 2018
 * In order to clean this data most effectively, set the reporting rate to 24 hours, the sample rate to 1 hour, and collect new data, so that the solution built doesn't have to account for emails of different size. 
 
 
+***
 
+March 7, 2018  
+
+* features to build:  
+    + shiny dashboard structure  
+    + download data  
+    + plotly hydrograph of daily averages  
+    + map to click on  
+* spent time looking at CCLite4 apps and reading code  
+* brainstorming of app features  
+
+    
+    
+    
+    
+    
