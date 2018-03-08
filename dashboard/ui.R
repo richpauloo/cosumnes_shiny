@@ -1,6 +1,6 @@
 shinyUI(navbarPage(theme=shinytheme("cosmo"),
 	title=HTML('<div><a href="http://snap.uaf.edu" target="_blank"><img src="./img/SNAP_acronym_100px.png" width="80%"></a></div>'),
-	tabPanel("Community Charts", value="commChart"),
+	tabPanel("Hydrographs", value="commChart"),
 	tabPanel("About", value="about"),
 	windowTitle="CC4L",
 	collapsible=TRUE,
@@ -9,17 +9,17 @@ shinyUI(navbarPage(theme=shinytheme("cosmo"),
 	tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
 	conditionalPanel("input.tsp=='commChart'",
 	fluidRow(
-		column(4, h2("Community Charts v4 Lite"), h3("Explore the climate outlook for your community")),
+		column(4, h2("American River Groundwater Observatory")),
 		column(8,
 			fluidRow(
-				column(6, selectInput("location", "Community", c("", locs), selected="", multiple=F, width="100%")),
-				column(6, selectInput("dec", "Decades", dec.lab, selected=dec.lab[c(1,4,6,9)], multiple=TRUE, width="100%"))
-			),
-			fluidRow(
-				column(4, selectInput("variable", "Climate Variable", c("Temperature", "Precipitation"), selected="Temperature", multiple=F, width="100%")),
-				column(4, selectInput("units", "Units", c("C, mm", "F, in"), selected="C, mm", multiple=F, width="100%")),
-				column(4, selectInput("rcp", "RCP", c("4.5 (low)", "6.0 (medium)", "8.5 (high)"), selected="6.0 (medium)", multiple=F, width="100%"))
-			)
+				column(6, selectInput("location", "Well ID", c("", cs_coords$Location), selected="", multiple=F, width="100%")),
+				column(6, selectInput("units", "Units", c("meters", "feet"), selected="meters", multiple=F, width="100%"))
+			)#,
+			# fluidRow(
+			# 	column(4, selectInput("variable", "Climate Variable", c("Temperature", "Precipitation"), selected="Temperature", multiple=F, width="100%")),
+			# 	column(4, selectInput("units", "Units", c("C, mm", "F, in"), selected="C, mm", multiple=F, width="100%")),
+			# 	column(4, selectInput("rcp", "RCP", c("4.5 (low)", "6.0 (medium)", "8.5 (high)"), selected="6.0 (medium)", multiple=F, width="100%"))
+			# )
 		)
 	),
 	bsTooltip("location", "Enter a community. The menu will filter as you type. You may also select a community using the map.", "top", options = list(container="body")),

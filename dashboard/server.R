@@ -10,8 +10,17 @@ observeEvent(input$location, {
 })
 
 output$Map <- renderLeaflet({
-	leaflet() %>% addProviderTiles("CartoDB.Positron") %>% setView(lng=-140, lat=57, zoom=4) %>%
-		addCircleMarkers(data=cities.meta, radius = ~sqrt(10*PopClass), color = ~palfun(PopClass), stroke=FALSE, fillOpacity=0.5, layerId = ~Location)
+	leaflet() %>% addProviderTiles("CartoDB.Positron") %>% setView(lng=-121.378, lat=38.30139, zoom=13) %>%
+		addCircleMarkers(data=cs_coords, 
+		                 stroke=FALSE, 
+		                 fillOpacity=0.5, 
+		                 radius = 5,
+		                 layerId = ~Location,
+		                 popup = paste("Well ID: ", cs_coords$Location, "<br>",
+		                               "Latitude: ", cs_coords$lat, "<br>",
+		                               "Longitude: ", cs_coords$long, "<br>",
+		                               "Battery: ", paste0(cs_coords$battery, "%") ) 
+		                 )
 })
 
 observeEvent(input$Map_marker_click, {
@@ -33,7 +42,7 @@ observeEvent(input$Map_marker_click, {
 
 observeEvent(input$location, {
 	p <- input$Map_marker_click
-	p2 <- subset(cities.meta, Location==input$location)
+	p2 <- subset(cs_coords, Location==input$location)
 	if(nrow(p2)==0){
 		leafletProxy("Map") %>% removeMarker(layerId="Selected")
 	} else if(is.null(p$id) || input$location!=p$id){
@@ -51,28 +60,39 @@ RCPLabel <- reactive({ switch(input$rcp, "4.5 (low)"="Low-Range Emissions (RCP 4
 Unit <- reactive({ if(input$variable=="Temperature") paste0("°", substr(input$units, 1, 1)) else substr(input$units, 4, 5) })
 Min <- reactive({ if(input$variable=="Temperature") NULL else 0 })
 
-CRU_loc <- reactive({ subset(d.cru32, Location==input$location) })
-CRU_var <- reactive({ subset(CRU_loc(), Var==input$variable) })
+CRU_loc <- reactive({ subset(well_dat, Location==input$location) })
 
-d0 <- reactive({
-	if(input$variable=="Temperature" | input$variable=="Precipitation" ){
-		if(!exists("d")){
-			prog <- Progress$new(session, min=0, max=1)
-			on.exit(prog$close())
-			prog$set(message="Loading data...", value=1)
-			load(paste0("cc4lite_2km_plus_NT10min.RData"), envir=.GlobalEnv)
-		}
-		return(d)
-	}
-})
-d1_loc <- reactive({ subset(d0(), Location==input$location) })
-d2_var <- reactive({ subset(d1_loc(), Var==input$variable) })
+# CRU_loc <- reactive({ subset(d.cru32, Location==input$location) })
+# CRU_var <- reactive({ subset(CRU_loc(), Var==input$variable) })
+
+# d0 <- reactive({
+# 	if(input$variable=="Temperature" | input$variable=="Precipitation" ){
+# 		if(!exists("d")){
+# 			prog <- Progress$new(session, min=0, max=1)
+# 			on.exit(prog$close())
+# 			prog$set(message="Loading data...", value=1)
+# 			load(paste0("cc4lite_2km_plus_NT10min.RData"), envir=.GlobalEnv)
+# 		}
+# 		return(d)
+# 	}
+# })
+# d1_loc <- reactive({ subset(d0(), Location==input$location) })
+# d2_var <- reactive({ subset(d1_loc(), Var==input$variable) })
+# d3_scen <- reactive({
+# 	x <- rbind(CRU_var(), subset(d2_var(), Scenario==substr(RCPLabel(), nchar(RCPLabel())-7, nchar(RCPLabel())-1)))
+# 	if(input$units=="Fin") { if(input$variable=="Temperature") { x[,6:7] <- x[,6:7]*(9/5) + 32 } else x[,6:7] <- x[,6:7]/25.4 }
+# 	x
+# })
+# d4_dec <- reactive({ if(is.null(d3_scen())) NULL else subset(d3_scen(), Decade %in% Dec()) })
+
 d3_scen <- reactive({
-	x <- rbind(CRU_var(), subset(d2_var(), Scenario==substr(RCPLabel(), nchar(RCPLabel())-7, nchar(RCPLabel())-1)))
-	if(input$units=="Fin") { if(input$variable=="Temperature") { x[,6:7] <- x[,6:7]*(9/5) + 32 } else x[,6:7] <- x[,6:7]/25.4 }
-	x
+  	x <- rbind(CRU_loc(), )
+  	if(input$units=="Fin") { if(input$variable=="Temperature") { x[,6:7] <- x[,6:7]*(9/5) + 32 } else x[,6:7] <- x[,6:7]/25.4 }
+  	x
 })
+
 d4_dec <- reactive({ if(is.null(d3_scen())) NULL else subset(d3_scen(), Decade %in% Dec()) })
+
 
 output$Chart1 <- renderChart2({
 	if(is.null(d4_dec())) return(Highcharts$new())
@@ -82,7 +102,7 @@ output$Chart1 <- renderChart2({
 	p$colors(Colors())
 	p$title(text=paste("Average Monthly", input$variable, "for", input$location), style=list(color="#000000"))
 	p$subtitle(text=paste("Historical CRU 3.2 and 5-Model Projections using", RCPLabel()), style=list(color="gray"))
-	p$legend(verticalAlign="top", y=50, itemStyle=list(color="gray"))
+	#p$legend(verticalAlign="top", y=50, itemStyle=list(color="gray"))
 	p$xAxis(categories=month.abb)
 	p$yAxis(title=list(text=paste0(input$variable, " (", Unit(), ")"), style=list(color="gray")), min=Min())
 	d <- d4_dec()[5:7]
