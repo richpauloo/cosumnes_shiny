@@ -11,10 +11,11 @@ observeEvent(input$location, {
 
 # leaflet output of wells
 output$Map <- renderLeaflet({
-	leaflet() %>% addProviderTiles("CartoDB.Positron") %>% setView(lng=-121.378, lat=38.30139, zoom=13) %>%
+	leaflet() %>% addProviderTiles(providers$Esri.WorldImagery) %>% setView(lng=-121.378, lat=38.30139, zoom=13) %>%
 		addCircleMarkers(data=cs_coords, 
 		                 stroke=FALSE, 
-		                 fillOpacity=0.5, 
+		                 fillOpacity=.6, 
+		                 color= "magenta",
 		                 radius = 5,
 		                 layerId = ~Location, 
 		                 label = ~hover_text,
@@ -25,7 +26,7 @@ output$Map <- renderLeaflet({
 		                   style=list(
 		                     'background'='rgba(255,255,255,0.95)',
 		                     'border-color' = 'rgba(0,0,0,1)',
-		                     'border-radius' = '4px',
+		                     'border-radius' = '3px',
 		                     'border-style' = 'solid',
 		                     'border-width' = '4px'))
 		                 )
@@ -84,7 +85,8 @@ output$Chart1 <- renderPlotly({
     plot_ly(x = ~Date) %>%
     add_lines(y = ~value, name = input$location) %>% 
     layout(
-      title = paste0("Monitoring Well ID: ", input$location),
+      title = FALSE,
+      # title = paste0("Monitoring Well ID: ", input$location),
       xaxis = list(
         rangeselector = list(
           buttons = list(
@@ -113,7 +115,16 @@ output$Chart1 <- renderPlotly({
         rangeslider = list(type = "date")),
       
       yaxis = list(title = paste0("Level (", input$units, ")"))) %>% 
-    config(displayModeBar = FALSE)
+    config(displayModeBar = FALSE) %>% 
+    add_annotations(
+      yref="paper", 
+      xref="paper", 
+      y=1.15, 
+      x=1, 
+      text = paste0(input$location, " Hydrograph"), 
+      showarrow=F, 
+      font=list(size=17)
+    )
 })
 
 
@@ -137,24 +148,24 @@ output$network <- renderPlotly({
   
   # plot 
   plot_ly(temp, x = ~Date) %>%
-    add_lines(y = ~MW2, name = "MW2", color= I("gray50")) %>%
-    add_lines(y = ~MW9, name = "MW9", color= I("gray50")) %>%
-    add_lines(y = ~MW11, name = "MW11", color= I("gray50")) %>%
-    add_lines(y = ~MW20, name = "MW20", color= I("gray50")) %>%
-    add_lines(y = ~OnetoAg, name = "OnetoAg", color= I("gray50")) %>%
-    add_lines(y = ~MW19, name = "MM19", color= I("gray50")) %>%
-    add_lines(y = ~MW23, name = "MW23", color= I("gray50")) %>%
-    add_lines(y = ~MW22, name = "MW22", color= I("gray50")) %>%
-    add_lines(y = ~MW7, name = "MW7", color= I("gray50")) %>%
+    add_lines(y = ~MW2, name = "MW2", color= I("gray5")) %>%
+    add_lines(y = ~MW9, name = "MW9", color= I("gray10")) %>%
+    add_lines(y = ~MW11, name = "MW11", color= I("gray15")) %>%
+    add_lines(y = ~MW20, name = "MW20", color= I("gray20")) %>%
+    add_lines(y = ~OnetoAg, name = "OnetoAg", color= I("gray25")) %>%
+    add_lines(y = ~MW19, name = "MM19", color= I("gray30")) %>%
+    add_lines(y = ~MW23, name = "MW23", color= I("gray35")) %>%
+    add_lines(y = ~MW22, name = "MW22", color= I("gray40")) %>%
+    add_lines(y = ~MW7, name = "MW7", color= I("gray45")) %>%
     add_lines(y = ~MW5, name = "MW5", color= I("gray50")) %>%
-    add_lines(y = ~MW3, name = "MW3", color= I("gray50")) %>%
-    add_lines(y = ~MW17, name = "MW17", color= I("gray50")) %>%
-    add_lines(y = ~MW13, name = "MW13", color= I("gray50")) %>%
+    add_lines(y = ~MW3, name = "MW3", color= I("gray55")) %>%
+    add_lines(y = ~MW17, name = "MW17", color= I("gray60")) %>%
+    add_lines(y = ~MW13, name = "MW13", color= I("gray65")) %>%
     add_ribbons(data = smooth, x=~x, ymin=~ymin, ymax=~ymax, color = I("gray80"), name = "Confidence Interval") %>% 
     add_lines(data = smooth, x=~x, y=~y, color = I("red"), name = "AVERAGE") %>% 
     layout(
-      showlegend = FALSE,
-      title = "Entire Monitoring Well Network",
+      showlegend = TRUE,
+      title = FALSE, #"Entire Monitoring Well Network",
       xaxis = list(
         rangeselector = list(
           buttons = list(
@@ -180,14 +191,30 @@ output$network <- renderPlotly({
               stepmode = "todate"),
             list(step = "all"))),
         
-        #rangeslider = list(type = "date")),
-        range = c( input$date_range[1], input$date_range[2])),
-        rangeslider(list(type="date")),
-      
+        rangeslider = list(type = "date"),
+        range = c( input$date_range[1], input$date_range[2]) 
+      ),
+        
       yaxis = list(title = paste0("Level (", input$units_2, ")"))
+      
     ) %>% 
     
     config(displayModeBar = FALSE)
+ 
 })
+
+# Download All Data
+output$download_all_data <- downloadHandler(
+  # This function returns a string which tells the client browser what name to use when saving the file.
+  filename = function() {
+    paste0("UC_Water_gw_observatory", ".csv")
+  },
+  
+  # This function should write data to a file given to it by the argument 'file'.
+  content = function(file) {
+    # Write to a file specified by the 'file' argument
+    write.table(well_dat_short, file, sep = ",", row.names = FALSE)
+  }
+)
 
 })

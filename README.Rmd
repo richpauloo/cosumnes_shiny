@@ -145,10 +145,27 @@ March 8, 2018
 * performed load test on highcharts and plotly for group plot.  
     + Plotly much faster, easily scalable to daily measurements at 15 wells over 5 years in ~20 seconds  
     + plotly doesn't requre xts data types, as highchart does  
-* 
+* built lots of features  
+    + leaflet  
+    + individual hydrograph for a selected well  
+        + connection between selected well, drop down menu, and hydrograph  
+    + network plot with geom_smooth average line  
+    + logo and theme  
+* still needs:  
+    + about_the_site .md with a nice AI figure    
+    + about floodplain recharge .md with figures  
+    + about page:
 
 
+***
 
+March 9, 2018  
+
+* implemented a download button  
+* tested putting in a data table, and removed it  
+* blocked by  
+    + example of some 24 hour data to clean  
+    + actual data stream coming in that I can push to UCD MySQL server  
 
 
 

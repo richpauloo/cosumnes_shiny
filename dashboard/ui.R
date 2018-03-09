@@ -8,32 +8,44 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	id="tsp",
   tags$head(includeScript("ga-cc4liteFinal.js"), includeScript("ga-allapps.js")),
 	tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
+	
+	# chart panel
 	conditionalPanel("input.tsp=='commChart'",
+	
+	# row 1
 	fluidRow(
-		column(4, h4("California Groundwater Observatory"), h6("Real-time aquifer monitoring in the South American Subbasin")),
+		column(4, 
+		       h4("California Groundwater Observatory"), 
+		       h6("Real-time aquifer monitoring in the South American Subbasin")),
 		column(8,
-			fluidRow(
-				column(6, selectInput("location", "Monitoring Well ID", c("", colnames(well_dat_short)[-1]), selected="", multiple=F, width="100%")),
-				column(6, selectInput("units", "Units", c("meters", "feet"), selected="meters", multiple=F, width="100%"))
-			)
-		)
+		       fluidRow(
+		                column(6, 
+		                       selectInput("location", "Monitoring Well ID", 
+		                       c("", colnames(well_dat_short)[-1]), 
+		                       selected="", multiple=F, width="100%")),
+		                column(6, 
+		                       selectInput("units", "Units", c("meters", "feet"), 
+		                       selected="meters", multiple=F, width="100%"))
+			     )
+		 )
 	),
 	bsTooltip("location", "Enter a monitoring well ID. The menu will filter as you type. You may also select a monitoring well using the map.", "top", options = list(container="body")),
 	
-	
-	
+	# row 2
 	fluidRow(
-	column(4, leafletOutput("Map")),
-	column(8,
-		plotlyOutput("Chart1"),
-		HTML('<style>.rChart {width: 100%; height: "auto"}</style>')
-	)
+	  column(4, 
+	         leafletOutput("Map")),
+	  column(8,
+	         plotlyOutput("Chart1"),
+	         HTML('<style>.rChart {width: 100%; height: "auto"}</style>'))
 	),
 	br(),
+	
+	# row 3
 	fluidRow(
-		column(2, actionButton("help_loc_btn", "About Wells", class="btn-block"), br()),
-		column(2, actionButton("help_rcp_btn", "About RCPs", class="btn-block")),
-		column(8, h5(HTML(paste(caption, '<a href="http://snap.uaf.edu" target="_blank">snap.uaf.edu</a>'))))
+		column(2, actionButton("help_loc_btn", "Site Info", class="btn-block"), br()),
+		column(2, actionButton("help_rcp_btn", "Recharge", class="btn-block")),
+		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
 	bsModal("modal_loc", "Alaska and western Canada communities", "help_loc_btn", size="large",
 		HTML('
@@ -76,24 +88,42 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		More information on these RCPs can be found in the 2014 IPCC fifth Assessment Report.'
 	))
 	),
-	conditionalPanel("input.tsp=='network'", 
+	
+	
+  # network panel	
+  conditionalPanel("input.tsp=='network'", 
 	fluidRow(
-	  
-	  column(4, h4("California Groundwater Observatory"), h6("Real-time aquifer monitoring in the South American Subbasin")),
+	  column(4, 
+	         h4("California Groundwater Observatory"), 
+	         h6("Real-time aquifer monitoring in the South American Subbasin")),
 	  column(8,
 	         fluidRow(
-	           column(6, dateRangeInput("date_range", "Date Range", start = min(well_dat_short$Date), end = max(well_dat_short$Date), width="100%")),
-	           column(6, selectInput("units_2", "Units", c("meters", "feet"), selected="meters", multiple=F, width="100%"))
+	           column(6, 
+	                  dateRangeInput("date_range", "Date Range", 
+	                  start = min(well_dat_short$Date), 
+	                  end = max(well_dat_short$Date), width="100%")),
+	           column(6, 
+	                  selectInput("units_2", "Units", 
+	                  c("meters", "feet"), selected="meters", 
+	                  multiple=F, width="100%"))
 	         )
 	  )
 	),
-	bsTooltip("location", "Enter a monitoring well ID. The menu will filter as you type. You may also select a monitoring well using the map.", "top", options = list(container="body")),
+	bsTooltip("location", "Enter or select a monitoring well ID. You may also select a monitoring well using the map.", "top", options = list(container="body")),
 	
 	fluidRow(
-	  column(12, plotlyOutput("network"))
-	  )
+	  column(12, 
+	         plotlyOutput("network"))), br(),
+	fluidRow(
+	  column(6, 
+	         downloadButton("download_all_data", "Download All Data", width = "100%")),
+	  column(8,
+	         h5("Data for download is available in CSV format and is updated daily as new data is received. This webapp displays daily averages of monitoring well data, whereas the raw data comes at hourly intervals."))
 	)
-	#plotlyOutput("network"))
-	,
-	conditionalPanel("input.tsp=='about'", source("about.R",local=T)$value)
+	),
+	
+	
+  # about panel
+  conditionalPanel("input.tsp=='about'", source("about.R",local=T)$value)
+
 ))

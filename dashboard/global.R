@@ -1,4 +1,3 @@
-library(plyr)
 library(shiny)
 library(shinythemes)
 library(shinyBS)
@@ -60,12 +59,6 @@ load("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/well_dat_short.
 
   
 # original code
-lapply(list.files(pattern="^cc4lite_launch_.*.\\.RData$"), load, envir=.GlobalEnv)
-caption <- 'Due to inter-annual variability and model uncertainty, these graphs are useful for examining a range of projected trends, but not for precise prediction. For more information regarding climate projections, please visit'
-#hc_add_series(well_dat_1_t, id = "well_1") %>% dec.lab <- paste0(seq(2010, 2090, by=10), "s")
+#lapply(list.files(pattern="^cc4lite_launch_.*.\\.RData$"), load, envir=.GlobalEnv)
+caption <- 'These monitoring wells reflect the water table elevation in the unconsolidated sand and gravel aquifer in the South American River subbasin. For more information on research by UC Water, please visit'
 
-brks <- c(0, 1e4, 5e4, 1e5, 2.5e5, 5e5, 1e6)
-nb <- length(brks)
-cities.meta$PopClass <- cut(cities.meta$Population, breaks=brks, include.lowest=TRUE, labels=FALSE)
-cities.meta$PopClass[is.na(cities.meta$PopClass)] <- 1
-palfun <- colorFactor(palette=c("navy", "navy", "magenta4", "magenta4", "red", "red"), domain=1:(nb-1))
