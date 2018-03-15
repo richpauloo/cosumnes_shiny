@@ -169,7 +169,24 @@ March 9, 2018
 
 
 
+***
 
+March 14, 2018  
+
+* still blocked by 24 hour data  
+* learned that data won't come in regualrly, and I'll have to deal with missing data, as well as backing the data up  
+
+**NEW PLAN**  
+
+* write a script that:  
+    + first queries the cloud db for missing values and updates them if new values are in the system  
+    + checks the date on the computer, looks for the date closest to that in the sqlite database, cleans that data, and appends that data to the overall dataframe in the cloud server  
+    + Missing data are stored as NA  
+    + appends new data to the table  
+    + [updates the table](https://www.w3schools.com/sql/sql_update.asp) with previously missing values  
+
+
+***
 
 
 
