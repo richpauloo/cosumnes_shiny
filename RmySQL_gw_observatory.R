@@ -3,7 +3,7 @@ library(RMySQL)
 # create a mySQL connection object
 con <- dbConnect(RMySQL::MySQL(), 
                  user = "gw_observatory",
-                 password = "ceu9chaiCai3ieb8Kiesh5",
+                 password = "",
                  host = "sage.metro.ucdavis.edu",
                  dbname = "gw_observatory")
 

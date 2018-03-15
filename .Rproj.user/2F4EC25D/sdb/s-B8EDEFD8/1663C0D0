@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"Using RSQLite to query LevelSender\"\noutput: html_notebook\nauthor: Rich Pauloo and Amy Yoder\ndate: February 21, 2018\n---\n\nThe purpose of this script is to obtain data from the Home Station Database for Level Sender, in `C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite`. Ultimately, the goal is to develop an R Shiny Web application that automatically downloads the most up-to-date levelsender data and displays it.  \n\nInformation from Solinist on LevelSender can be found [here](https://www.solinst.com/products/dataloggers-and-telemetry/solinst-telemetry-systems/9500-levelsender/instructions/user-guide/5-3-0-data-from-software.php#5-4-0).  \n\nThe R interface to SQLite is documented [here](https://cran.r-project.org/web/packages/RSQLite/RSQLite.pdf), and offers far superior examples compared to anything else available on the web at the time of this writing.  \n\n\nFirst, let's load the relevant libraries.\n```{r}\nlibrary(RSQLite)\nlibrary(DBI)\nlibrary(tidyverse)\nlibrary(stringr)\n```\n\nSecond, let's connect to our .sqlite database via R, and list the tables of data within.\n```{r}\n# connect to SQLite database that Solinist regularly updates\ndb <- dbConnect(SQLite(), dbname = \"C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite\")\n\n# list tables\ndb_tables <- dbListTables(db)\n\ndb_tables\n```\n\nFor now, we're interested in all of this data, so let's read it all in a list, and explore.\n```{r}\n# We can read in one table by simply naming it...\ndbReadTable(db, \"ConfigEmailSetup\")\n\n# ...or we can all the tables into a list...\ntable_list <- lapply(db_tables, function(x) { dbReadTable(db, x) } )\n\n# ...and example them one-by-one.\ntable_list[[8]] \n\n# It looks like the \"ReceivedEmail\" table contains the most interesting information\ndbReadTable(db, \"ReceivedEmail\")\n\n# There's a lot of information that we don't need. Let's select what we do need.\ndbReadTable(db, \"ReceivedEmail\") %>% \n  select(ReceivedDate, Subject, Body)\n```\n\nLooks like there are a lot of emails that aren't actually reports. Let's filter out the emails that are relevant to us, and give the columns more intuitive names.\n```{r}\n# read, select interesting data, filter for relevant emails with data, and rename columns\nll_dat <- \n  dbReadTable(db, \"ReceivedEmail\") %>% \n  select(ReceivedDate, Subject, Body) %>% \n  filter( grepl(\"LS Report\", Subject) ) %>% \n  rename(date = ReceivedDate, subject = Subject, body = Body)\n\n# We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.\nll_dat$date <- as.POSIXct( strptime( ll_dat$date, \"%Y-%m-%d %H:%M:%S\" ) )\n\n# Now we can arrange by date.\nll_dat %>% arrange(date)\n\n```\n\nOh no! Although these data are arranged by time, we're actaully looking at data from multiple wells! In the body of each observation is a serial number. Let's extract that so we can arrange by it as well before we mine the body of each email for data.\n\n\nThe body of the emails is complete spaggetti.\n```{r}\n# clean up one email just to see what dat is there.\nll_dat$body[1] %>% str_replace_all(\"\\r\\n\",\" \") %>% View()\n\nll_dat %>% separate(body, as.character(1:100), sep =\"\\r\\n\")\n\n?separate\n```\n\n\n\n\n\n\n\n\n",
+    "created" : 1521154153009.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2301317227",
+    "id" : "1663C0D0",
+    "lastKnownWriteTime" : 1521157797,
+    "last_content_update" : 1521157797499,
+    "path" : "~/GitHub/cosumnes_shiny/sqLite/rsqlite.Rmd",
+    "project_path" : "sqLite/rsqlite.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

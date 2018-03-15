@@ -11,7 +11,7 @@ Read in data (already extracted from SQLite db)
 library(tidyverse)
 
 # read in data
-d <- read_csv('clean_me.csv')
+#d <- read_csv('clean_me.csv')
 
 # how many senders do we have?
 d$SerialNumber %>% unique() # 0s correspond to notifications, and all others are actual level senders

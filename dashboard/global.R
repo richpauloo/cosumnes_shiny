@@ -6,6 +6,7 @@ library(leaflet)
 library(quantmod)
 library(tidyverse)
 library(anytime)
+library(plotly)
 
 # well location is built into the code, meaning every time a well is added, the code will need to be updated.
 cs_coords <- data.frame(lat = c(38.30139, 38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101), 

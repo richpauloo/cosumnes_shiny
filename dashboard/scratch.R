@@ -259,3 +259,22 @@ ggplot(df, aes(monthweek, weekdayf, fill = VIX.Close)) +
        title = "Time-Series Calendar Heatmap", 
        subtitle="Yahoo Closing Price", 
        fill="Close")
+
+
+
+
+
+###############################################################
+library(dygraphs)
+
+dygraph(well_dat_short)
+
+class(well_dat_short)
+mdeaths %>% class()
+as.ts(well_dat_short) %>% dygraph()
+
+ts(well_dat_short[,-1], start= min(well_dat_short$Date), end = max(well_dat_short$Date), frequency = 1) %>% 
+  dygraph()
+
+
+
