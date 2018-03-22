@@ -64,7 +64,7 @@ observeEvent(input$location, {
 
 # when the location changes, so does the data for the plot
 location <- reactive({ 
-  well_dat_short %>% gather(wells, value, -Date) %>% 
+  well_dat_daily %>% gather(wells, value, -Date) %>% 
     filter(wells == input$location)
 })
 
@@ -133,8 +133,8 @@ output$network <- renderPlotly({
   # gather data and get geom_smooth line from it
   temp <- NA
   ifelse(input$units_2 == "meters", 
-         temp <- well_dat_short, 
-         temp <- cbind.data.frame(Date = well_dat_short[,1], (well_dat_short[,-1]) * 3.28084))
+         temp <- well_dat_daily, 
+         temp <- cbind.data.frame(Date = well_dat_daily[,1], (well_dat_daily[,-1]) * 3.28084))
   
   temp %>% 
     gather(wells, level, -Date) %>% 
@@ -164,7 +164,7 @@ output$network <- renderPlotly({
     add_ribbons(data = smooth, x=~x, ymin=~ymin, ymax=~ymax, color = I("gray80"), name = "Confidence Interval") %>% 
     add_lines(data = smooth, x=~x, y=~y, color = I("red"), name = "AVERAGE") %>% 
     layout(
-      showlegend = TRUE,
+      showlegend = FALSE,
       title = FALSE, #"Entire Monitoring Well Network",
       xaxis = list(
         rangeselector = list(
@@ -213,7 +213,7 @@ output$download_all_data <- downloadHandler(
   # This function should write data to a file given to it by the argument 'file'.
   content = function(file) {
     # Write to a file specified by the 'file' argument
-    write.table(well_dat_short, file, sep = ",", row.names = FALSE)
+    write.table(well_dat_daily, file, sep = ",", row.names = FALSE)
   }
 )
 

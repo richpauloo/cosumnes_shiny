@@ -277,4 +277,36 @@ ts(well_dat_short[,-1], start= min(well_dat_short$Date), end = max(well_dat_shor
   dygraph()
 
 
+################################################################
+
+# Tibbletime for the long old data so that we have something to show folks before the website displays continuous data
+library(here)
+library(lubridate)
+
+# load the big data
+load(here('dashboard','well_dat.Rdata'))
+
+# pull out the dates (minus the time zone) and format as date-time object
+well_dat$Date <- substr(well_dat$Date, start = 1, stop = 19) %>% ymd_hms()
+
+# create time tibble
+well_dat <- as_tbl_time(well_dat, index = Date)
+
+# remove NAs and aggregate monthly means
+well_dat_daily <- 
+  well_dat %>% 
+  na.omit() %>% 
+  collapse_by("daily") %>%
+  group_by(Date) %>%
+  summarise_all(mean)
+
+# visualize
+well_dat_daily %>% 
+  gather(well, value, -Date) %>% 
+  ggplot(aes(Date, value)) +
+    geom_line(aes(color = well))
+
+# export to .RData for app
+save(well_dat_daily, file="well_dat_daily.RData")
+
 

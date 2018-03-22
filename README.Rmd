@@ -206,7 +206,15 @@ March 15, 2018
 
 ***
 
-March 16, 2018 
+March 21-22, 2018  
+
+* removed MW 14 (no data)  
+* rewrote "About" page, as well well as "site info" and "floodplain recharge" buttons with filler images/text  
+* filtered missing values from 2014-2017 data and published to on richpauloo.shinyapps.io/gw_observatory as an example    + aggregated data with `tibbletime` into daily means. This noticably boots load rates in plotly  
+* communicated with Amy, Nathan and Mauricio about the 24hour reporting rate -- still blocked =(   
+
+
+*** 
 
 
 

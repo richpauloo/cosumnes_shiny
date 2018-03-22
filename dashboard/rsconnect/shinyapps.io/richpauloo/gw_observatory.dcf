@@ -1,0 +1,13 @@
+name: gw_observatory
+title: gw_observatory
+username:
+account: richpauloo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 305475
+bundleId: 1282970
+url: https://richpauloo.shinyapps.io/gw_observatory/
+when: 1521743825.78048
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: about.R|scratch.R|well_dat.RData|well_dat_short.RData|www/img/SNAP_acronym_100px.png|www/img/test.ai

@@ -3,7 +3,7 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	tabPanel("Hydrographs", value="commChart"),
 	tabPanel("Network", value="network"),
 	tabPanel("About", value="about"),
-	windowTitle="CC4L",
+	windowTitle="UC Water | Groundwater Observatory",
 	collapsible=TRUE,
 	id="tsp",
   tags$head(includeScript("ga-cc4liteFinal.js"), includeScript("ga-allapps.js")),
@@ -21,7 +21,7 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		       fluidRow(
 		                column(6, 
 		                       selectInput("location", "Monitoring Well ID", 
-		                       c("", colnames(well_dat_short)[-1]), 
+		                       c("", colnames(well_dat_daily)[-1]), 
 		                       selected="", multiple=F, width="100%")),
 		                column(6, 
 		                       selectInput("units", "Units", c("meters", "feet"), 
@@ -47,46 +47,11 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		column(2, actionButton("help_rcp_btn", "Recharge", class="btn-block")),
 		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
-	bsModal("modal_loc", "Alaska and western Canada communities", "help_loc_btn", size="large",
-		HTML('
-		<p style="text-align:justify">There are about 4,000 communities in the app.
-		Communities are not truly point data, e.g., weather station data.
-		Rather, they are based on SNAP\'s downscaled climate data sets and a "community" refers to the <em>grid cell</em> which contains a community\'s coordinates.
-		Communities are included from Alaska as well as the Canadian provinces Alberta, British Columbia, Manitoba, Saskatchewan, and Yukon and Northwest territories.</p>
-		
-		<p style="text-align:justify">Downscaled climate is on a 2-km by 2-km grid for all but the Northwest Territories, which is restricted to a 10-minute by 10-minute resolution.
-		It is especially in the latter case that the data in this app cannot be thought of as community-level data.
-		There are other minor annoyances with the data such as some communities not having the most precise coordinates.
-		However, this is a negligible source of error compared to the uncertainty in future climate and is further smoothed out by the decadal time scale to which the data are averaged.</p>
-		
-		<p style="text-align:justify">All communities make use of a 30-year historical baseline (1960-1989) using SNAP\'s downscaled CRU data.
-		While there is a range of decadal averages based on multiple climate models for a given future decade,
-		there is also a range depicted for the 30-year baseline window to highlight inter-annual variability during the historical period.</p>
-		
-		<p style="text-align:justify">Both the source CRU data and climate models are downscaled to higher resolution climatologies (either 2-km PRISM or 10-minute CRU climatologies), which are based on historical weather station observations.
-		When viewing a plot for a given community, both the historical baseline and the future decadal modeled projections come from downscaled data at a common resolution.
-		The distinction to make note of is that Northwest Territories (NT) communities are derived from much coarser data since the NT region falls outside the 2-km PRISM extent, leaving the 10-minute scale data as the only option.
-		More information can be found in the documentation related to this app. See the <code>About</code> tab at the top of the page for links.</p>
-		
-		<p style="text-align:justify">In the map, the relative size and particularly the color (blue, purple, and red),
-		are there to assist with spotting larger landmark cities by eye if using the map.
-		Purple represents moderately sized cities and red is reserved for the few large cities. Any location with a population under 50,000 remains blue.</p>'
-	)),
+	bsModal("modal_loc", "Site Information", "help_loc_btn", size="large",
+		includeMarkdown("site_info.md")),
 	
-	bsModal("modal_rcp", "Representative Concentration Pathways", "help_rcp_btn", size="large",
-		HTML('
-		<p style="text-align:justify">Together the RCPs show a range of possible future atmospheric greenhouse gas concentrations driven by human activity.
-		The RCP values represent radiative forcing (W/m^2) in 2100 relative to pre-industrial levels.
-		For example, greenhouse gas concentrations in 2100 which lead to the net solar energy absorbed by each square meter of Earth 
-		averaging 4.5 W/m^2 greater than pre-industrial levels is referred to as RCP 4.5.</p>
-		
-		<p style="text-align:justify">RCP 4.5 can be thought of as the "low" scenario.
-		It assumes peak emissions around 2040 with radiative forcing stabilizing around 2100.
-		RCP 6.0 (medium) assumes peak emissions around 2080, then decline due to future technology and management, with radiative forcing similarly stabilizing around 2100.
-		RCP 8.5 (high) assumes increasing emissions through 2100.
-		RCP 2.6 assumes peak emissions between 2010 and 2020 - essentially that we are already there - and then decline substantially. This is unrealistic so it is not included.</p>
-		More information on these RCPs can be found in the 2014 IPCC fifth Assessment Report.'
-	))
+	bsModal("modal_rcp", "Floodplain Recharge", "help_rcp_btn", size="large",
+		includeMarkdown("recharge_info.md"))
 	),
 	
 	
@@ -100,8 +65,8 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	         fluidRow(
 	           column(6, 
 	                  dateRangeInput("date_range", "Date Range", 
-	                  start = min(well_dat_short$Date), 
-	                  end = max(well_dat_short$Date), width="100%")),
+	                  start = min(well_dat_daily$Date), 
+	                  end = max(well_dat_daily$Date), width="100%")),
 	           column(6, 
 	                  selectInput("units_2", "Units", 
 	                  c("meters", "feet"), selected="meters", 
@@ -124,6 +89,6 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	
 	
   # about panel
-  conditionalPanel("input.tsp=='about'", source("about.R",local=T)$value)
+  conditionalPanel("input.tsp=='about'", includeMarkdown("about.md")) #source("about.R",local=T)$value)
 
 ))
