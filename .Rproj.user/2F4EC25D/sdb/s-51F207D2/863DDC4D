@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(shiny)\nlibrary(DBI)\nlibrary(pool)\nlibrary(DT)\nlibrary(tidyverse)\n#library(tibbletime)\n#library(RMySQL)\nlibrary(stringr)\nlibrary(cowplot)\nlibrary(data.table)\nlibrary(leaflet)\n\n\ncs_coords <- data_frame(lat = c(38.30139, 38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101), \n                        long = c(-121.378, -121.379, -121.381, -121.369, -121.374, -121.379, -121.379, -121.382, -121.391, -121.391, -121.376, -121.384, -121.382, -121.384), \n                        well = c(\"MW14\", \"MW2\", \"MW9\", \"MW11\", \"MW20\", \"OnetoAg\", \"MW19\", \"MW23\", \"MW22\", \"MW7\", \"MW5\", \"MW3\", \"MW17\", \"MW13\"))\n\n# connect to mySQL db\ncon <- dbConnect(RMySQL::MySQL(),\n                 user = \"gw_observatory\",\n                 password = \"\",\n                 host = \"169.237.35.237\",\n                 dbname = \"gw_observatory\",\n                 port = 33306)\n\n# pool <- dbPool(\n#   drv = RMySQL::MySQL(),\n#   dbname = \"gw_observatory\",\n#   host = \"sage.metro.ucdavis.edu\",\n#   username = \"gw_observatory\", \n#   password = \"\"\n# )\n# onStop(function() {\n#   poolClose(pool)\n# })\n\n\n# query mySQL db\ndf <- dbReadTable(con, \"test\")\n\n# fix dates\ndates <- as.POSIXct( strptime(df$Date, format = '%Y-%m-%d %H:%M:%S') ) # format changes between mySWL writing and reading\n\n# reorganize \ncs_hydro_long <- gather(df, well, head, -Date)\n\ncs_hydro_long$Date <- dates # recycling makes this work\n\n\n# scratch\ngrouped_heads <- cs_hydro_long %>%\n  group_by(Date) %>%\n  summarise(mean = mean(head, na.rm = TRUE),\n            min = min(head, na.rm = TRUE),\n            max = max(head, na.rm = TRUE))\n\n",
+    "created" : 1521825724254.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2103650789",
+    "id" : "863DDC4D",
+    "lastKnownWriteTime" : 1520529763,
+    "last_content_update" : 1520529763,
+    "path" : "~/GitHub/cosumnes_shiny/cosumnes_gw_observatory/global.R",
+    "project_path" : "cosumnes_gw_observatory/global.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
