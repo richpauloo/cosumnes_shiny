@@ -222,6 +222,50 @@ March 23, 2018
 
 
 
+*** 
+
+March 24- April 3, 2018  
+
+To summarize:  
+
+* LS # 284221 needs a hard restart which must be done in-field  
+* Nathan sent reconfiguration emails (to change report interval to 24 hours) to ALL other LS units ( 283687, 284195, 284215, 284216, 284217  )  
+* report interval was successfully changed to 24 hours for ONE LS unit ( 283687 )  
+
+I did:  
+
+* send config email to remaining level senders ( 284195, 284215, 284216, 284217 )  
+
+Next steps:  
+
+* reconfigure LS # 284221 in-field and set reporting interval to 24 hours  
+
+Email must be sent as plain text with scheduled report time change to AFTER the next reporting interval (restart time must be a time after the next report)  
+
+To: idLS@gmail.com  
+subject: <leave blank>  
+
+Stop report  
+Location:  
+Sample Rate: 60 minutes  
+Report Rate: 24 hours  
+Mail Rate: 24 hours  
+Start Report: 05/04/2018 13:00:00  
+
+
+***
+
+
+
+
+
+
+
+
+
+
+
+
     
     
     
