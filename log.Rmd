@@ -255,11 +255,24 @@ Start Report: 05/04/2018 13:00:00
 
 ***
 
+April 10, 2018  
+
+* charged $9/month to personal CC to keep shinyapp on shinyapps.io  
+* long term solution: migrate shiny app to AWS. Began that process.  
 
 
+***
 
+Ocotber 8, 2018  
 
+* after a big hiatus, work is underway once more!  
+* $9/month charge has been removed  
+* reorganized github folder  
+* worked on extracting data from email bodies  in sqlite file  
 
+* Andrew working with Mauricio to get sqlite file on my computer to automatically refresh  
+* Andrew working to get me clean data through August  
+* I will write rules for extracting data through October  
 
 
 

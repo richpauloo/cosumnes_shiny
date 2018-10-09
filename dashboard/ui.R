@@ -6,8 +6,6 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	windowTitle="UC Water | Groundwater Observatory",
 	collapsible=TRUE,
 	id="tsp",
-  tags$head(includeScript("ga-cc4liteFinal.js"), includeScript("ga-allapps.js")),
-	tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
 	
 	# chart panel
 	conditionalPanel("input.tsp=='commChart'",
@@ -48,10 +46,10 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
 	bsModal("modal_loc", "Site Information", "help_loc_btn", size="large",
-		includeMarkdown("site_info.md")),
+		includeMarkdown("www/site_info.md")),
 	
 	bsModal("modal_rcp", "Floodplain Recharge", "help_rcp_btn", size="large",
-		includeMarkdown("recharge_info.md"))
+		includeMarkdown("www/recharge_info.md"))
 	),
 	
 	

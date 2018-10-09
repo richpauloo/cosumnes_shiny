@@ -1,7 +1,7 @@
 ---
 title: "Using RSQLite to query LevelSender"
 output: html_notebook
-author: Rich Pauloo and Amy Yoder
+author: Rich Pauloo & Amy Yoder
 date: February 21, 2018
 ---
 
@@ -42,7 +42,7 @@ table_list <- lapply(db_tables, function(x) { dbReadTable(db, x) } )
 # ...and example them one-by-one.
 table_list[[8]] 
 
-# It looks like the "ReceivedEmail" table contains the most interesting information
+# It looks like the "ReceivedEmail" table contains the groundwater level
 dbReadTable(db, "ReceivedEmail")
 
 # There's a lot of information that we don't need. Let's select what we do need.
@@ -53,33 +53,106 @@ dbReadTable(db, "ReceivedEmail") %>%
 Looks like there are a lot of emails that aren't actually reports. Let's filter out the emails that are relevant to us, and give the columns more intuitive names.
 ```{r}
 # read, select interesting data, filter for relevant emails with data, and rename columns
-ll_dat <- 
+d <- 
   dbReadTable(db, "ReceivedEmail") %>% 
   select(ReceivedDate, Subject, Body) %>% 
   filter( grepl("LS Report", Subject) ) %>% 
   rename(date = ReceivedDate, subject = Subject, body = Body)
 
 # We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.
-ll_dat$date <- as.POSIXct( strptime( ll_dat$date, "%Y-%m-%d %H:%M:%S" ) )
+d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
 
 # Now we can arrange by date.
-ll_dat %>% arrange(date)
-
+d %>% arrange(date)
 ```
 
 Oh no! Although these data are arranged by time, we're actaully looking at data from multiple wells! In the body of each observation is a serial number. Let's extract that so we can arrange by it as well before we mine the body of each email for data.
 
 
-The body of the emails is complete spaggetti.
+The body of the emails is complete spaggetti. We need to organize these and write rules to extract the data we need.
 ```{r}
-# clean up one email just to see what dat is there.
-ll_dat$body[1] %>% str_replace_all("\r\n"," ") %>% View()
-
-ll_dat %>% separate(body, as.character(1:100), sep ="\r\n")
-
-?separate
+# clean up one email 
+strsplit(d$body[143], "\r\n")
 ```
 
+Create a new 4 column dataframe (datetime, temp, level, id) for each email body, and store in a list. Keep in mind that some email bodies will have more than one level logger.
+```{r}
+l <- unlist(strsplit(d$body[100], "\r\n")) # email body as character vector
+
+# get MW serial # 
+id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+id <- as.numeric(substr(id, 9, nchar(id)))
+
+# get all datetime, temp, level data
+i <- str_detect(l, "^[:digit:]") # all lines that begin with a digit
+ld <- l[i] 
+ld
+
+# organize into a dataframe
+m <- str_split_fixed(ld, ", ", 3) # matrix of strings
+m[, 2:3] <- round(as.numeric(m[, 2:3]), 2)
+df <- as.data.frame(m)
+colnames(df) <- c("dt", "temp", "level")
+df$dt <- as.POSIXct( strptime(df$dt, format = '%d/%m/%Y %H:%M:%S') ) # format dates
+df$id <-  id # add id
+df
+```
+
+Generalize for all monitoring wells.
+```{r}
+mw5 <- ": 283687" # serial number of MW5 (which includes barrologger)
+
+# which records include MW5?
+temp <- sapply(d$body, str_detect, mw5)
+names(temp) <- NULL
+temp
+
+# number of serial numbers per email
+temp2 <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
+temp3 <- sapply(temp2, function(x){length(x[str_detect(x, "Serial: ")])})
+data.frame(mw_5 = temp, n_serial = temp3) # visualize 
+temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+
+# function to apply
+get_data <- function(v){ 
+  
+  l <- unlist(strsplit(d$body[1], "\r\n")) # email body as character vector
+  
+  ss <- sum(str_detect(l, mw5)) # does mw5 appear in the email?
+  
+  # if the well is MW 5, whcih contains a barrologger
+  if (ss =! 0) {
+    id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+  }
+
+  # if the well does not contain a barrologger
+  if (ss == 0) {
+    
+  }
+
+
+  
+  # get MW serial # 
+  id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+  id <- as.numeric(substr(id, 9, nchar(id)))
+  
+  # get all datetime, temp, level data
+  i <- str_detect(l, "^[:digit:]") # all lines that begin with a digit
+  ld <- l[i] 
+  ld
+  
+  # organize into a dataframe
+  m <- str_split_fixed(ld, ", ", 3) # matrix of strings
+  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2)
+  df <- as.data.frame(m)
+  colnames(df) <- c("dt", "temp", "level")
+  df$dt <- as.POSIXct(strptime(df$dt, format = '%d/%m/%Y %H:%M:%S')) # format dates
+  df$id <-  id # add id
+  df
+  
+  
+}
+```
 
 
 

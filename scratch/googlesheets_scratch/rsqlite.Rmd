@@ -1,0 +1,89 @@
+---
+title: "Using RSQLite to query LevelSender"
+output: html_notebook
+author: Rich Pauloo and Amy Yoder
+date: February 21, 2018
+---
+
+The purpose of this script is to obtain data from the Home Station Database for Level Sender, in `C:/Users/ayoder/Documents/LevelSender/db/levelsender.sqlite`. Ultimately, the goal is to develop an R Shiny Web application that automatically downloads the most up-to-date levelsender data and displays it.  
+
+Information from Solinist on LevelSender can be found [here](https://www.solinst.com/products/dataloggers-and-telemetry/solinst-telemetry-systems/9500-levelsender/instructions/user-guide/5-3-0-data-from-software.php#5-4-0).  
+
+The R interface to SQLite is documented [here](https://cran.r-project.org/web/packages/RSQLite/RSQLite.pdf), and offers far superior examples compared to anything else available on the web at the time of this writing.  
+
+
+First, let's load the relevant libraries.
+```{r}
+library(RSQLite)
+library(DBI)
+library(tidyverse)
+library(stringr)
+```
+
+Second, let's connect to our .sqlite database via R, and list the tables of data within.
+```{r}
+# connect to SQLite database that Solinist regularly updates
+db = dbConnect(SQLite(), dbname = "C:/Users/ayoder/Documents/LevelSender/db/levelsender.sqlite")
+
+# list tables
+db_tables <- dbListTables(db)
+
+db_tables
+```
+
+For now, we're interested in all of this data, so let's read it all in a list, and explore.
+```{r}
+# We can read in one table by simply naming it...
+dbReadTable(db, "ConfigEmailSetup")
+
+# ...or we can all the tables into a list...
+table_list <- lapply(db_tables, function(x) { dbReadTable(db, x) } )
+
+# ...and example them one-by-one.
+table_list[[8]] 
+
+# It looks like the "ReceivedEmail" table contains the most interesting information
+dbReadTable(db, "ReceivedEmail")
+
+# There's a lot of information that we don't need. Let's select what we do need.
+dbReadTable(db, "ReceivedEmail") %>% 
+  select(ReceivedDate, Subject, Body)
+```
+
+Looks like there are a lot of emails that aren't actually reports. Let's filter out the emails that are relevant to us, and give the columns more intuitive names.
+```{r}
+# read, select interesting data, filter for relevant emails with data, and rename columns
+ll_dat <- 
+  dbReadTable(db, "ReceivedEmail") %>% 
+  select(ReceivedDate, Subject, Body) %>% 
+  filter( grepl("LS Report", Subject) ) %>% 
+  rename(date = ReceivedDate, subject = Subject, body = Body)
+
+# We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.
+ll_dat$date <- as.POSIXct( strptime( ll_dat$date, "%Y-%m-%d %H:%M:%S" ) )
+
+# Now we can arrange by date.
+ll_dat %>% arrange(date)
+
+```
+
+Oh no! Although these data are arranged by time, we're actaully looking at data from multiple wells! In the body of each observation is a serial number. Let's extract that so we can arrange by it as well before we mine the body of each email for data.
+
+
+The body of the emails is complete spaggetti.
+```{r}
+# clean up one email just to see what dat is there.
+ll_dat$body[1] %>% str_replace_all("\r\n"," ") %>% View()
+
+ll_dat %>% separate(body, as.character(1:100), sep ="\r\n")
+
+?separate
+```
+
+
+
+
+
+
+
+

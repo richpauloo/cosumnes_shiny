@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(shiny)\nlibrary(shinythemes)\nlibrary(shinyBS)\nlibrary(leaflet)\nlibrary(quantmod)\nlibrary(tidyverse)\nlibrary(anytime)\nlibrary(plotly)\n\n# well location is built into the code, meaning every time a well is added, the code will need to be updated.\ncs_coords <- data.frame(lat = c(38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101), \n                        lng = c(-121.379, -121.381, -121.369, -121.374, -121.379, -121.379, -121.382, -121.391, -121.391, -121.376, -121.384, -121.382, -121.384), \n                        Location = c(\"MW2\", \"MW9\", \"MW11\", \"MW20\", \"OnetoAg\", \"MW19\", \"MW23\", \"MW22\", \"MW7\", \"MW5\", \"MW3\", \"MW17\", \"MW13\")\n                        )\n\n# battery life will come in as a df from MySQL\nbattery_df = data.frame(Location = c(\"MW2\", \"MW9\", \"MW11\", \"MW20\", \"OnetoAg\", \"MW19\", \"MW23\", \"MW22\", \"MW7\", \"MW5\", \"MW3\", \"MW17\", \"MW13\"), \n                        battery = 88:100)\n# add battery info to well_cords\nleft_join(cs_coords, battery_df, by = \"Location\") -> cs_coords\n\n\n# add custom labels. http://rpubs.com/bhaskarvk/electoral-Map-2016.\ncs_coords$hover_text <- mapply(\n  function(well_id, lat, lng, bat) {\n    htmltools::HTML(\n      sprintf(\n        \"<span style='font-size:16px;font-weight:bold'>%s</span>\n        <div style='width:95%%'>\n        <span style='font-size:12px'>Latitude: %s</span><br/>\n        <span style='font-size:12px'>Longitude: %s</span><br/>\n        <span style='font-size:12px'>Battery: %s%%</span><br/>\n        \n        \n        </div>\n        </div>\",\n        well_id,\n        lat,\n        lng,\n        bat\n      )\n    )\n  },\n  cs_coords$Location,\n  cs_coords$lat,\n  cs_coords$lng,\n  cs_coords$battery, SIMPLIFY = F) \n  \n\n\n##############################################################################\n\n# bring in clean test data for now - need to experiment with .RData in SQL\n#load(\"C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/well_dat_daily.RData\")\nload(\"data/well_dat_daily.RData\")\nwell_dat_daily <- well_dat_daily %>% as.data.frame()\n\n##############################################################################\n\n  \n# original code\n#lapply(list.files(pattern=\"^cc4lite_launch_.*.\\\\.RData$\"), load, envir=.GlobalEnv)\ncaption <- 'These monitoring wells reflect the water table elevation in the South American River subbasin. For more information on research by UC Water, please visit'\n\n",
+    "created" : 1523401531122.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3495891770",
+    "id" : "DF355B3",
+    "lastKnownWriteTime" : 1523401538,
+    "last_content_update" : 1523401538596,
+    "path" : "~/GitHub/aws_gwob/global.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
