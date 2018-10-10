@@ -20,6 +20,26 @@ library(tidyverse)
 library(stringr)
 ```
 
+Refresh emails and append to sqlite database.
+```{r}
+# simulates clicking the "Retrieve Emails Button"
+system(
+  shQuote(
+    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", 
+    type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+  )
+)
+
+# opens the software which finalizes the data append from the emails that were read during the LSEmailClient.exe
+system(
+  shQuote(
+    "C:/Program Files (x86)/Solinst/LevelSender/LSender.exe", 
+    type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+  )
+)
+```
+
+
 Second, let's connect to our .sqlite database via R, and list the tables of data within.
 ```{r}
 # connect to SQLite database that Solinist regularly updates
@@ -98,36 +118,44 @@ df$id <-  id # add id
 df
 ```
 
-Generalize for all monitoring wells.
+Generalize for all monitoring wells... but first check to see which records contain MW5
 ```{r}
 mw5 <- ": 283687" # serial number of MW5 (which includes barrologger)
 
 # which records include MW5?
 temp <- sapply(d$body, str_detect, mw5)
 names(temp) <- NULL
-temp
+#temp
+sum(temp) # 182 records contain MW5
 
 # number of serial numbers per email
 temp2 <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
 temp3 <- sapply(temp2, function(x){length(x[str_detect(x, "Serial: ")])})
 data.frame(mw_5 = temp, n_serial = temp3) # visualize 
-temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+temp4 <- temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+length(temp4) # sizteen records from Oneto Denir
+```
+
+Generalize for all monitoring wells.
+```{r}
+# strat with temp2, the formatted lines of each email body
+lines <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
 
 # function to apply
 get_data <- function(v){ 
   
-  l <- unlist(strsplit(d$body[1], "\r\n")) # email body as character vector
-  
-  ss <- sum(str_detect(l, mw5)) # does mw5 appear in the email?
+  #v  = lines[[1]]
+  #v2 = lines[[2000]]
+  ss <- sum(str_detect(v, mw5)) # does mw5 appear in the email?
   
   # if the well is MW 5, whcih contains a barrologger
-  if (ss =! 0) {
-    id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+  if (ss == 0) {
+    id <- v[str_detect(v, "Serial: ")][2] # 2nd serial is b_logger, not LS
   }
 
   # if the well does not contain a barrologger
-  if (ss == 0) {
-    
+  if (ss == 1) {
+    id <- v[str_detect(v, "Serial: ")][3] # or is it [2]?? Ask Andrew...
   }
 
 
@@ -152,6 +180,8 @@ get_data <- function(v){
   
   
 }
+
+get_data(d$body)
 ```
 
 

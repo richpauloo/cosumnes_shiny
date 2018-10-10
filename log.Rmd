@@ -275,6 +275,26 @@ Ocotber 8, 2018
 * I will write rules for extracting data through October  
 
 
+***  
+
+October 9, 2018  
+
+* Met with Graham, Laura, Andrew to get on the same page  
+* talked about QAQC:  
+  + discussed using Gmail R client to send email notifications during cleaning if something looks funny in the data (i.e. -  a hydrograph signal with vartiance above some threshold, say 2SD of the distribution of hydrograph values)  
+* include the following information in well popups:  
+  + screened interval depths  
+  + well depth  
+  + whether the well is pumped or not  
+  + some geenral notes per well  
+
+
+* `scratch/popup_CSS.R` shows how to override default leaflet CSS and use mapview CSS in `popupTable`s.  
+* added two .exe files in `clean/rsqlite.Rmd` that refresh the emails and append them to the sqlite database. These need to be run at the top of the cleaning script.  
+* waiting on Chris from IT to set up another home station email so I can refresh the emails coming in from the levelsenders on THIS computer.  
+
+
+
 
 
 
