@@ -1,0 +1,200 @@
+---
+title: "Using RSQLite to query LevelSender"
+output: html_notebook
+author: Rich Pauloo & Amy Yoder
+date: February 21, 2018
+---
+
+The purpose of this script is to obtain data from the Home Station Database for Level Sender, in `C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite`. Ultimately, the goal is to develop an R Shiny Web application that automatically downloads the most up-to-date levelsender data and displays it.  
+
+Information from Solinist on LevelSender can be found [here](https://www.solinst.com/products/dataloggers-and-telemetry/solinst-telemetry-systems/9500-levelsender/instructions/user-guide/5-3-0-data-from-software.php#5-4-0).  
+
+The R interface to SQLite is documented [here](https://cran.r-project.org/web/packages/RSQLite/RSQLite.pdf), and offers far superior examples compared to anything else available on the web at the time of this writing.  
+
+
+First, let's load the relevant libraries.
+```{r}
+library(RSQLite)
+library(DBI)
+library(tidyverse)
+library(stringr)
+```
+
+Refresh emails and append to sqlite database.
+```{r}
+# simulates clicking the "Retrieve Emails Button"
+system(
+  shQuote(
+    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", 
+    type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+  )
+)
+
+# opens the software which finalizes the data append from the emails that were read during the LSEmailClient.exe
+# system(
+#   shQuote(
+#     "C:/Program Files (x86)/Solinst/LevelSender/LSender.exe",
+#     type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+#   )
+# )
+```
+
+
+Second, let's connect to our .sqlite database via R, and list the tables of data within.
+```{r}
+# connect to SQLite database that Solinist regularly updates
+db <- dbConnect(SQLite(), dbname = "C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite")
+
+# list of tables
+db_tables <- dbListTables(db)
+```
+
+For now, we're interested in all of this data, so let's read it all in a list, and explore.
+```{r}
+# We can read in one table by simply naming it...
+dbReadTable(db, "ConfigEmailSetup")
+
+# ...or we can all the tables into a list...
+table_list <- lapply(db_tables, function(x) { dbReadTable(db, x) } )
+
+# ...and example them one-by-one.
+table_list[[8]] 
+
+# It looks like the "ReceivedEmail" table contains the groundwater level
+dbReadTable(db, "ReceivedEmail")
+
+# There's a lot of information that we don't need. Let's select what we do need.
+dbReadTable(db, "ReceivedEmail") %>% 
+  select(ReceivedDate, Subject, Body)
+```
+
+Looks like there are a lot of emails that aren't actually reports. Let's filter out the emails that are relevant to us, and give the columns more intuitive names.
+```{r}
+# read, select interesting data, filter for relevant emails with data, and rename columns
+d <- dbReadTable(db, "ReceivedEmail") %>% 
+  select(ReceivedDate, Subject, Body) %>% 
+  filter( grepl("LS Report", Subject) ) %>% 
+  rename(date = ReceivedDate, subject = Subject, body = Body)
+
+# We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.
+d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
+
+# Now we can arrange by date.
+#d %>% arrange(date)
+```
+
+Oh no! Although these data are arranged by time, we're actaully looking at data from multiple wells! In the body of each observation is a serial number. Let's extract that so we can arrange by it as well before we mine the body of each email for data.
+
+
+The body of the emails is complete spaggetti. We need to organize these and write rules to extract the data we need.
+```{r}
+# clean up one email 
+strsplit(d$body[143], "\r\n")
+```
+
+Create a new 4 column dataframe (datetime, temp, level, id) for each email body, and store in a list. Keep in mind that some email bodies will have more than one level logger. We do this for one email body to begin with.
+```{r}
+l <- unlist(strsplit(d$body[100], "\r\n")) # email body as character vector
+
+# get MW serial # 
+id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+id <- as.numeric(substr(id, 9, nchar(id)))
+
+# get all datetime, temp, level data
+i <- str_detect(l, "^[:digit:]") # all lines that begin with a digit
+ld <- l[i] 
+ld
+
+# organize into a dataframe
+m <- str_split_fixed(ld, ", ", 3) # matrix of strings
+m[, 2:3] <- round(as.numeric(m[, 2:3]), 2)
+df <- as.data.frame(m)
+colnames(df) <- c("dt", "temp", "level")
+df$dt <- as.POSIXct( strptime(df$dt, format = '%d/%m/%Y %H:%M:%S') ) # format dates
+df$id <-  id # add id
+df
+```
+
+Now we generalize the above code for all monitoring wells... but first check to see which records contain MW5.
+```{r}
+mw5 <- ": 283687" # serial number of MW5 (which includes barrologger)
+
+# which records include MW5?
+temp <- sapply(d$body, str_detect, mw5)
+names(temp) <- NULL
+#temp
+sum(temp) # 182 records contain MW5
+
+# number of serial numbers per email
+temp2 <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
+temp3 <- sapply(temp2, function(x){length(x[str_detect(x, "Serial: ")])})
+data.frame(mw_5 = temp, n_serial = temp3) # visualize 
+temp4 <- temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+length(temp4) # sizteen records from Oneto Denir
+```
+
+Generalize for all monitoring wells.
+```{r}
+# strat with temp2, the formatted lines of each email body
+lines <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
+
+# serial number for mw5
+mw5 <- ": 283687"
+
+# function to apply
+get_data <- function(v){ 
+  
+  #v  = lines[[1]]
+  #v2 = lines[[2000]]
+  baro <- NULL # initalize baro vector
+  ss <- sum(str_detect(v, mw5)) # does mw5 appear in the email?
+  
+  # if well is MW 5
+  if (ss == 1) {
+    id <- v[str_detect(v, "Serial: ")][2]   # 2nd serial is level logger
+    baro <- v[str_detect(v, "Serial: ")][3] # 3rd serial is baro  logger
+  }
+
+  # if the well is not mw5
+  if (ss == 0) {
+    id <- v[str_detect(v, "Serial: ")][2] # 2nd serial number is level logger
+  }
+
+  # subset for the levellogger serial number
+  id <- as.numeric(substr(id, 9, nchar(id)))
+  
+  # if barometric pressure logger is present, get its serial
+  if(!is.null(baro)){baro <- as.numeric(substr(baro, 9, nchar(baro)))}
+  
+  
+  # get all datetime, temp, level data
+  i <- str_detect(v, "^[:digit:]") # all lines that begin with a digit
+  ld <- v[i] # subset for these lines
+  
+  # organize into a dataframe
+  m <- str_split_fixed(ld, ", ", 3)          # matrix of strings
+  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2) # round temp and level
+  df <- as.data.frame(m)                     # convert to df
+  colnames(df) <- c("dt", "temp", "level")   # rename columns
+  df$dt <- as.POSIXct(strptime(df$dt, format = '%d/%m/%Y %H:%M:%S')) # format dates
+  df$id <-  id # add id
+  df
+  
+  
+}
+
+get_data(d$body)
+```
+
+Convert from PSI to meters
+```{r}
+# convert from PSI to meters
+psi_to_m <- function(psi){
+  return(psi * 0.703070)
+}
+```
+
+
+
+
+

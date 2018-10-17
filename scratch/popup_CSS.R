@@ -11,6 +11,7 @@ m <- leaflet() %>%
 # generate a regular mapview object to get default popup CSS
 v <- mapview(breweries91, zcol = "founded")
 v@map$dependencies[[4]] # this is the popup table dependency that we want
+write_rds(v@map$dependencies[[4]], paste(fp$app, "data","css.rds", sep = "/")) # write to rds
 
 # add the popup table css from mapview to override leaflet's
 m$dependencies <- list(m$dependencies[[1]],m$dependencies[[2]],

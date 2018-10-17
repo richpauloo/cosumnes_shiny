@@ -1,0 +1,70 @@
+---
+title: "Integrate Andrew's data"
+output: html_document
+---
+
+The purpose of this script is to:  
+
+* integrate the data that Andrew cleaned into the Cloud SQL database  
+* identify the extent of the data, after which we need to automate the cleaning process  
+
+
+First, let's load the relevant libraries.
+```{r}
+library(RSQLite)
+library(DBI)
+library(tidyverse)
+library(stringr)
+library(readr)
+library(lubridate)
+```
+
+Upload the clean historical data, and remove erroneous super large values.
+```{r}
+# read data
+cd <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/andrew_clean_data/LevelSenderAllData.csv")
+
+# gather 
+cd <- gather(cd, well, level, -Date) %>%  
+  rename(date = Date) %>%                 # rename date column
+  mutate(date = mdy_hm(date),             # convert date to datetime
+         level = as.numeric(level)) %>%   # convert level to numeric
+  filter(level < 1000)                    # filter erroneous large values
+```
+
+Find extent of the clean data. Looks like it's October 2, 2018.
+```{r}
+# visualize
+cd %>% ggplot(aes(date, level, color = well)) + geom_line()
+
+# find extent
+cd %>% arrange(date) %>% tail(100) #%>% distinct(well)
+
+# spread back to wide format
+cd <- spread(cd, well, level)
+```
+
+
+Connect to our .sqlite database via R, and write the clean data to it.
+```{r}
+# password for gw obs db
+pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
+
+# connect to the cloud SQL database 
+db <- dbConnect(RMySQL::MySQL(),
+                user = "gw_observatory",
+                password = pw,
+                host = "169.237.35.237",
+                dbname = "gw_observatory",
+                port = 33306)
+
+# write clean data to database
+dbWriteTable(db, name = "clean_historical_data_through_october", value = cd)
+
+# list tables to ensure data has been written
+dbListTables(db)
+
+# disconnect
+dbDisconnect(db)
+```
+
