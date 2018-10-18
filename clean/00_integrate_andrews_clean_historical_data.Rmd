@@ -63,8 +63,34 @@ dbWriteTable(db, name = "clean_historical_data_through_october", value = cd)
 
 # list tables to ensure data has been written
 dbListTables(db)
+```
 
+
+Wite elevation data for sites to cloud database.  
+```{r}
+# load elevation data for sites
+elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/andrew_clean_data/elev.csv")
+
+# password for gw obs db
+pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
+
+# connect to the cloud SQL database 
+cdb <- dbConnect(RMySQL::MySQL(),
+                 user = "gw_observatory",
+                 password = pw,
+                 host = "169.237.35.237",
+                 dbname = "gw_observatory",
+                 port = 33306)
+
+# write elevation data to the cloud database
+dbWriteTable(cdb, name = "elevation_data", value = elev)
+```
+
+
+Disconnect from SQLite and cloud SQL databases.
+```{r}
 # disconnect
 dbDisconnect(db)
+dbDisconnect(cdb)
 ```
 

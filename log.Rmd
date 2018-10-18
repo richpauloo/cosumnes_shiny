@@ -318,6 +318,16 @@ Ocotber 15-16 2018
 
 October 17, 2018  
 
+* integrate elevation data into cloud database  
+* finalize function to clean emails  
+* automate separation of baro and monitoring well timeseries    
+* convert barometric pressure from PSI to meters  
+* adjust monitoring well data by barometric pressure  
+
+***  
+
+Ocotber 19, 2018
+
 * To do: write a function that grabs battery level from the level loggers, to pair with levelsender battery data.  
 
 

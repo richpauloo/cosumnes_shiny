@@ -10,6 +10,12 @@ The purpose of this script is to:
 * push clean data to cloud SQL database  
 
 
+*** 
+
+
+# Clean SQLite Emails
+
+
 First, load the relevant libraries.
 ```{r}
 library(RSQLite)
@@ -18,6 +24,7 @@ library(tidyverse)
 library(stringr)
 library(lubridate)
 ```
+
 
 Refresh emails and append to sqlite database.
 ```{r}
@@ -121,30 +128,121 @@ get_data <- function(v){
   return(df)
 }
 
-
-v = lines[[1]] # non-MW5
-v = lines[[6]]  # MW5
-
-get_data(v)
-```
-
-Apply function to all `current` data.
-```{r}
-
+# 
+# v = lines[[1]] # non-MW5
+# v = lines[[6]]  # MW5
+# 
+# get_data(v)
 ```
 
 
-Convert from PSI to meters
+Apply function to all `lines` from `current` data.
 ```{r}
-# convert from PSI to meters
+# apply function to list of current emails
+dfs <- lapply(lines, get_data)
+
+# bind all dfs together
+all <- do.call(rbind, dfs)
+
+# finagle the object classes
+all$level <- as.numeric(levels(all$level)[all$level])
+all$id <- factor(all$id)
+```
+
+
+Separate barologger and monitoring well data. 
+```{r}
+# serial number for baro logger
+baro_serial <- "2038232"
+
+# barometric timeseries
+baro_data <- 
+  filter(all, id == baro_serial) %>% 
+  arrange(dt) %>% 
+  mutate(level = as.numeric(level),
+         id = as.factor(id))
+
+# monitoring well timeseries
+mw_data <- 
+  filter(all, id != baro_serial) %>% 
+  arrange(dt) %>% 
+  mutate(level = as.numeric(level),
+         id = as.factor(id))
+
+# monitoring well timeseries with corresponding barometric data
+mw_data <- filter(mw_data, dt %in% baro_data$dt)
+
+# visualize 
+# mw_data %>% ggplot(aes(dt, level, color = id)) + geom_line()
+# baro_data %>% ggplot(aes(dt, level)) + geom_line()
+```
+
+
+
+***  
+
+
+# Tranformations
+
+
+Remove temperature from barometric and monitoring well data.
+```{r}
+baro_data <- select(baro_data, -temp)
+mw_data   <- select(mw_data,   -temp)
+```
+
+
+Convert barometric data from PSI to meters.
+```{r}
+# PSI to meters conversion factor
 psi_to_m <- function(psi){
   return(psi * 0.703070)
 }
+
+# convert barometric timeseries from PSI to meters 
+baro_data$level <- psi_to_m(baro_data$level)
 ```
 
 
+Adjust monitoring well levels by barometric data.
+```{r}
+# rename columns in baro and mw data to remove ambiguity, drop id in baro data
+baro_data <- rename(baro_data, level_baro = level) %>% select(-id)
+mw_data   <- rename(mw_data,   level_mw = level,   id_mw = id)
 
-Load the current state of the cloud database. Save a version of the database every 7 days
+# join baro and mw databy datetime, calculate adjusted water level
+adj_data <- left_join(baro_data, mw_data, by = "dt") %>% 
+  mutate(adj_level = level_mw - level_baro) # is this correct?
+```
+
+
+Adjust by elevation.
+```{r}
+# add level logger ids
+elev$ll_id <- c("1065731","1055097","1065751","2083804")
+
+# find baro-adjusted water level for matching date time in `date_of_last_dtw_measurement`
+ll_1065731 <- filter(adj_data, id_mw == "1065731" & dt <= mdy_hm("10/12/2018 14:54"))[1, "adj_level"]
+ll_1055097 <- filter(adj_data, id_mw == "1055097" & dt <= mdy_hm("10/12/2018 11:31"))[1, "adj_level"]
+ll_1065751 <- filter(adj_data, id_mw == "1065751" & dt <= mdy_hm("10/12/2018 13:37"))[1, "adj_level"]
+ll_2083804 <- filter(adj_data, id_mw == "2083804" & dt <= mdy_hm("10/12/2018 16:03"))[1, "adj_level"]
+
+# calculate effective cable length from measured depth to water (every 3 months) 
+# and actual water level above transducer at the date when water was measured ^^
+elev$cable_length <- elev$dtw_m + c(ll_1065731, ll_1055097, ll_1065751, ll_2083804)
+
+############################
+############################
+# Pick up on Friday with Andrew
+############################
+############################
+
+# create a key for whic wells subtract 9.5 meters for barometic pressure
+adj_data
+```
+
+
+Connect to cloud database. 
 ```{r}
 # password for gw obs db
 pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
@@ -156,31 +254,87 @@ cdb <- dbConnect(RMySQL::MySQL(),
                  host = "169.237.35.237",
                  dbname = "gw_observatory",
                  port = 33306)
+```
 
-# historical data
-hist <- dbReadTable(cdb, "clean_historical_data_through_october")
 
-# fix class of dates and levels
-hist$date <- ymd_hms(hist$date)
-hist <- hist %>% 
+Read the elevation table, and adjust well levels by their elevation.
+```{r}
+elev <- dbReadTable(cdb, "elevation_data")
+
+```
+
+
+***
+
+# Write Transformed Data to Cloud DB
+
+Read the present data, define classes, append new data, and filter for the unique rows.
+```{r}
+# most current data
+present <- dbReadTable(cdb, "present")
+
+# fix class of dates and levels in present data
+present$date <- ymd_hms(present$date)
+present <- present %>% 
   gather(well, level, -date) %>% 
   mutate(level = as.numeric(level)) %>% 
   spread(well, level)
 
+# convert variables into correct classes
+gather(present, well, level, -Date) %>%  
+  rename(date = Date) %>%                 # rename date column
+  mutate(date = mdy_hm(date),             # convert date to datetime
+         level = as.numeric(level)) %>%   # convert level to numeric
+  filter(level < 1000)                    # filter erroneous large values
+
+# append new data
+rbind()
+
+# gather 
+
+
+
+```
+
+
+Overwrite the `present` data in the cloud database.  
+```{r}
+
+```
+
+
+Save a version of the database every 7 days.
+```{r}
 # days of year to save copy of the data
 save_days <- seq(8,365, 7)
 
 # get day of the year
 doy <- yday(Sys.Date())
 
-ifelse(doy %in% save_days == TRUE, 
-       dbWriteTable(cdb, 
-                    name = paste(formatC(which(save_days == doy), width = 2, flag ="0"), 
-                                 doy-7, doy, data, sep="_"),
-                    value = d),
-       print("nothing to report here")
-       )
+# if present day is a save day, save a version of the database
+if(doy %in% save_days == TRUE){
+  dbWriteTable(cdb, 
+               name = Sys.Date(),
+               value = appended_unique)
+}
 ```
 
+
+Save this data to the cloud databse.
+```{r}
+dbWriteTable(cdb, 
+             name = "present",
+             value = appended_unique)
+```
+
+
+
+
+Disconnect from SQLite and cloud SQL databases.
+```{r}
+# disconnect
+dbDisconnect(db)
+dbDisconnect(cdb)
+```
 
 
