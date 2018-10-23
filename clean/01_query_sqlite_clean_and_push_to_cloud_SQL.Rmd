@@ -131,7 +131,8 @@ get_data <- function(v){
 # 
 # v = lines[[1]] # non-MW5
 # v = lines[[6]]  # MW5
-# 
+# v = lines[[195]] # non-equal ... need to save extra baro without filtering it out
+# another one is broken between 180 and 195... find it!
 # get_data(v)
 ```
 
@@ -139,7 +140,7 @@ get_data <- function(v){
 Apply function to all `lines` from `current` data.
 ```{r}
 # apply function to list of current emails
-dfs <- lapply(lines, get_data)
+dfs <- lapply(lines[1:180], get_data) # temp until non-equal issue is fixed
 
 # bind all dfs together
 all <- do.call(rbind, dfs)
@@ -173,8 +174,8 @@ mw_data <-
 mw_data <- filter(mw_data, dt %in% baro_data$dt)
 
 # visualize 
-# mw_data %>% ggplot(aes(dt, level, color = id)) + geom_line()
-# baro_data %>% ggplot(aes(dt, level)) + geom_line()
+mw_data %>% ggplot(aes(dt, level, color = id)) + geom_line()
+baro_data %>% ggplot(aes(dt, level)) + geom_line()
 ```
 
 
@@ -208,7 +209,7 @@ Adjust monitoring well levels by barometric data.
 ```{r}
 # rename columns in baro and mw data to remove ambiguity, drop id in baro data
 baro_data <- rename(baro_data, level_baro = level) %>% select(-id)
-mw_data   <- rename(mw_data,   level_mw = level,   id_mw = id)
+mw_data   <- rename(mw_data,   level_mw = level,   mw_id = id)
 
 # join baro and mw databy datetime, calculate adjusted water level
 adj_data <- left_join(baro_data, mw_data, by = "dt") %>% 
@@ -218,27 +219,39 @@ adj_data <- left_join(baro_data, mw_data, by = "dt") %>%
 
 Adjust by elevation.
 ```{r}
-# add level logger ids
-elev$ll_id <- c("1065731","1055097","1065751","2083804")
+# read in elevation data
+elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/andrew_clean_data/elev.csv")
 
-# find baro-adjusted water level for matching date time in `date_of_last_dtw_measurement`
-ll_1065731 <- filter(adj_data, id_mw == "1065731" & dt <= mdy_hm("10/12/2018 14:54"))[1, "adj_level"]
-ll_1055097 <- filter(adj_data, id_mw == "1055097" & dt <= mdy_hm("10/12/2018 11:31"))[1, "adj_level"]
-ll_1065751 <- filter(adj_data, id_mw == "1065751" & dt <= mdy_hm("10/12/2018 13:37"))[1, "adj_level"]
-ll_2083804 <- filter(adj_data, id_mw == "2083804" & dt <= mdy_hm("10/12/2018 16:03"))[1, "adj_level"]
+# add level logger ids
+elev$mw_id <- c("1065731","1055097","1065751","2083804")
+
+# find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
+ll_1065731 <- filter(adj_data, mw_id == "1065731" & dt <= mdy_hm("10/12/2018 14:54"))[1, "adj_level"]
+ll_1055097 <- filter(adj_data, mw_id == "1055097" & dt <= mdy_hm("10/12/2018 11:31"))[1, "adj_level"]
+ll_1065751 <- filter(adj_data, mw_id == "1065751" & dt <= mdy_hm("10/12/2018 13:37"))[1, "adj_level"]
+ll_2083804 <- filter(adj_data, mw_id == "2083804" & dt <= mdy_hm("10/12/2018 16:03"))[1, "adj_level"]
 
 # calculate effective cable length from measured depth to water (every 3 months) 
 # and actual water level above transducer at the date when water was measured ^^
 elev$cable_length <- elev$dtw_m + c(ll_1065731, ll_1055097, ll_1065751, ll_2083804)
 
+elev
 ############################
 ############################
 # Pick up on Friday with Andrew
 ############################
 ############################
 
-# create a key for whic wells subtract 9.5 meters for barometic pressure
-adj_data
+# create a key for which wells subtract 9.5 meters for barometic pressure
+adj_data <- left_join(adj_data, elev, by = "mw_id") 
+
+adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
+                                                9.5 + adj_level, 
+                                                adj_level))
+
+
+# add water elevation and subtract cable length to find final water level
+adj_data <- mutate(adj_data, final_level = adj_level + elev_m - cable_length) 
 ```
 
 
