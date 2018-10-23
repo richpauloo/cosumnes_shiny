@@ -1,0 +1,353 @@
+---
+title: "Query SQLite, clean, and push to cloud SQL"
+output: html_document
+---
+
+The purpose of this script is to:  
+
+* obtain data from the Home Station Database for Level Sender, in `C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite`  
+* clean that data (adjusting for barometric pressure)  
+* push clean data to cloud SQL database  
+
+
+*** 
+
+
+# Clean SQLite Emails
+
+
+First, load the relevant libraries.
+```{r}
+library(RSQLite)
+library(DBI)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+```
+
+
+Refresh emails and append to sqlite database.
+```{r}
+# simulates clicking the "Retrieve Emails Button"
+system(
+  shQuote(
+    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", 
+    type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+  )
+)
+```
+
+
+Connect to .sqlite database, and list the tables of data within.
+```{r}
+# connect to SQLite database that Solinist regularly updates
+db <- dbConnect(SQLite(), dbname = "C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite")
+
+# get metadata about level senders
+meta <- dbReadTable(db, "LevelSenderSettings")
+
+# read emails, select interesting data, filter for relevant emails with data, and rename columns
+d <- dbReadTable(db, "ReceivedEmail") %>% 
+  select(ReceivedDate, Subject, Body) %>% 
+  filter( grepl("LS Report", Subject) ) %>% 
+  rename(date = ReceivedDate, subject = Subject, body = Body)
+
+# We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.
+d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
+```
+
+
+Filter for all emails within a 30 day window of the current date.
+```{r}
+# 30 day rolling window
+current <- Sys.Date() - 30
+
+# add another date column without times
+d$date_2 <- as_date(d$date)
+
+# filter for all emails from `current` onwards
+check <- filter(d, date_2 >= current)
+```
+
+
+Identify records containing MW5.
+```{r}
+# serial number for mw5
+mw5 <- ": 283687"
+
+# separate each email body into a vector of lines, and store each in a list element
+lines <- lapply(check$body, function(x){unlist(strsplit(x, "\r\n"))} )
+
+# function to apply
+get_data <- function(v){ 
+  
+  # initalize baro vector
+  baro <- NULL 
+  
+  # does mw5 appear in the email? 
+  ss <- sum(str_detect(v, mw5)) 
+  
+  # if the well == MW 5
+  if (ss == 1) {
+    id <- v[str_detect(v, "Serial: ")][2]    # 2nd serial is level logger
+    baro <- v[str_detect(v, "Serial: ")][3]  # 3rd serial is baro  logger
+  }
+
+  # if the well != mw5
+  if (ss == 0) {
+    id <- v[str_detect(v, "Serial: ")][2]    # 2nd serial number is level logger
+  }
+
+  # subset for the level logger serial number
+  id <- as.numeric(substr(id, 9, nchar(id)))
+  
+  # if barometric pressure logger is present, get its serial
+  if(!is.null(baro)){baro <- as.numeric(substr(baro, 9, nchar(baro)))}
+  
+  # get all datetime, temp, level data
+  i <- str_detect(v, "^[:digit:]")           # all lines that begin with a digit
+  ld <- v[i]                                 # subset for these lines
+  
+  # organize into a dataframe
+  m <- str_split_fixed(ld, ", ", 3)          # matrix of strings
+  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2) # round temp and level
+  df <- as.data.frame(m)                     # convert to df
+  colnames(df) <- c("dt", "temp", "level")   # rename columns
+  df$dt <- dmy_hms(df$dt)                    # format dates
+  
+  # if the well == MW 5
+  if (ss == 1) {
+    df$id <- rep(c(id, baro), each = nrow(df)/2) # add ids of ll and baro logger
+  }
+
+  # if the well != mw5
+  if (ss == 0) {
+    df$id <- id # add id of level logger
+  }
+  
+  return(df)
+}
+
+# 
+# v = lines[[1]] # non-MW5
+# v = lines[[6]]  # MW5
+# v = lines[[195]] # non-equal ... need to save extra baro without filtering it out
+# another one is broken between 180 and 195... find it!
+# get_data(v)
+```
+
+
+Apply function to all `lines` from `current` data.
+```{r}
+# apply function to list of current emails
+dfs <- lapply(lines[1:180], get_data) # temp until non-equal issue is fixed
+
+# bind all dfs together
+all <- do.call(rbind, dfs)
+
+# finagle the object classes
+all$level <- as.numeric(levels(all$level)[all$level])
+all$id <- factor(all$id)
+```
+
+
+Separate barologger and monitoring well data. 
+```{r}
+# serial number for baro logger
+baro_serial <- "2038232"
+
+# barometric timeseries
+baro_data <- 
+  filter(all, id == baro_serial) %>% 
+  arrange(dt) %>% 
+  mutate(level = as.numeric(level),
+         id = as.factor(id))
+
+# monitoring well timeseries
+mw_data <- 
+  filter(all, id != baro_serial) %>% 
+  arrange(dt) %>% 
+  mutate(level = as.numeric(level),
+         id = as.factor(id))
+
+# monitoring well timeseries with corresponding barometric data
+mw_data <- filter(mw_data, dt %in% baro_data$dt)
+
+# visualize 
+mw_data %>% ggplot(aes(dt, level, color = id)) + geom_line()
+baro_data %>% ggplot(aes(dt, level)) + geom_line()
+```
+
+
+
+***  
+
+
+# Tranformations
+
+
+Remove temperature from barometric and monitoring well data.
+```{r}
+baro_data <- select(baro_data, -temp)
+mw_data   <- select(mw_data,   -temp)
+```
+
+
+Convert barometric data from PSI to meters.
+```{r}
+# PSI to meters conversion factor
+psi_to_m <- function(psi){
+  return(psi * 0.703070)
+}
+
+# convert barometric timeseries from PSI to meters 
+baro_data$level <- psi_to_m(baro_data$level)
+```
+
+
+Adjust monitoring well levels by barometric data.
+```{r}
+# rename columns in baro and mw data to remove ambiguity, drop id in baro data
+baro_data <- rename(baro_data, level_baro = level) %>% select(-id)
+mw_data   <- rename(mw_data,   level_mw = level,   mw_id = id)
+
+# join baro and mw databy datetime, calculate adjusted water level
+adj_data <- left_join(baro_data, mw_data, by = "dt") %>% 
+  mutate(adj_level = level_mw - level_baro) # is this correct?
+```
+
+
+Adjust by elevation.
+```{r}
+# read in elevation data
+elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/andrew_clean_data/elev.csv")
+
+# add level logger ids
+elev$mw_id <- c("1065731","1055097","1065751","2083804")
+
+# find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
+ll_1065731 <- filter(adj_data, mw_id == "1065731" & dt <= mdy_hm("10/12/2018 14:54"))[1, "adj_level"]
+ll_1055097 <- filter(adj_data, mw_id == "1055097" & dt <= mdy_hm("10/12/2018 11:31"))[1, "adj_level"]
+ll_1065751 <- filter(adj_data, mw_id == "1065751" & dt <= mdy_hm("10/12/2018 13:37"))[1, "adj_level"]
+ll_2083804 <- filter(adj_data, mw_id == "2083804" & dt <= mdy_hm("10/12/2018 16:03"))[1, "adj_level"]
+
+# calculate effective cable length from measured depth to water (every 3 months) 
+# and actual water level above transducer at the date when water was measured ^^
+elev$cable_length <- elev$dtw_m + c(ll_1065731, ll_1055097, ll_1065751, ll_2083804)
+
+elev
+############################
+############################
+# Pick up on Friday with Andrew
+############################
+############################
+
+# create a key for which wells subtract 9.5 meters for barometic pressure
+adj_data <- left_join(adj_data, elev, by = "mw_id") 
+
+adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
+                                                9.5 + adj_level, 
+                                                adj_level))
+
+
+# add water elevation and subtract cable length to find final water level
+adj_data <- mutate(adj_data, final_level = adj_level + elev_m - cable_length) 
+```
+
+
+Connect to cloud database. 
+```{r}
+# password for gw obs db
+pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
+
+# connect to the cloud SQL database 
+cdb <- dbConnect(RMySQL::MySQL(),
+                 user = "gw_observatory",
+                 password = pw,
+                 host = "169.237.35.237",
+                 dbname = "gw_observatory",
+                 port = 33306)
+```
+
+
+Read the elevation table, and adjust well levels by their elevation.
+```{r}
+elev <- dbReadTable(cdb, "elevation_data")
+
+```
+
+
+***
+
+# Write Transformed Data to Cloud DB
+
+Read the present data, define classes, append new data, and filter for the unique rows.
+```{r}
+# most current data
+present <- dbReadTable(cdb, "present")
+
+# fix class of dates and levels in present data
+present$date <- ymd_hms(present$date)
+present <- present %>% 
+  gather(well, level, -date) %>% 
+  mutate(level = as.numeric(level)) %>% 
+  spread(well, level)
+
+# convert variables into correct classes
+gather(present, well, level, -Date) %>%  
+  rename(date = Date) %>%                 # rename date column
+  mutate(date = mdy_hm(date),             # convert date to datetime
+         level = as.numeric(level)) %>%   # convert level to numeric
+  filter(level < 1000)                    # filter erroneous large values
+
+# append new data
+rbind()
+
+# gather 
+
+
+
+```
+
+
+Overwrite the `present` data in the cloud database.  
+```{r}
+
+```
+
+
+Save a version of the database every 7 days.
+```{r}
+# days of year to save copy of the data
+save_days <- seq(8,365, 7)
+
+# get day of the year
+doy <- yday(Sys.Date())
+
+# if present day is a save day, save a version of the database
+if(doy %in% save_days == TRUE){
+  dbWriteTable(cdb, 
+               name = Sys.Date(),
+               value = appended_unique)
+}
+```
+
+
+Save this data to the cloud databse.
+```{r}
+dbWriteTable(cdb, 
+             name = "present",
+             value = appended_unique)
+```
+
+
+
+
+Disconnect from SQLite and cloud SQL databases.
+```{r}
+# disconnect
+dbDisconnect(db)
+dbDisconnect(cdb)
+```
+
+

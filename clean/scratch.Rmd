@@ -20,15 +20,33 @@ library(tidyverse)
 library(stringr)
 ```
 
+Refresh emails and append to sqlite database.
+```{r}
+# simulates clicking the "Retrieve Emails Button"
+system(
+  shQuote(
+    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", 
+    type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+  )
+)
+
+# opens the software which finalizes the data append from the emails that were read during the LSEmailClient.exe
+# system(
+#   shQuote(
+#     "C:/Program Files (x86)/Solinst/LevelSender/LSender.exe",
+#     type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
+#   )
+# )
+```
+
+
 Second, let's connect to our .sqlite database via R, and list the tables of data within.
 ```{r}
 # connect to SQLite database that Solinist regularly updates
 db <- dbConnect(SQLite(), dbname = "C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite")
 
-# list tables
+# list of tables
 db_tables <- dbListTables(db)
-
-db_tables
 ```
 
 For now, we're interested in all of this data, so let's read it all in a list, and explore.
@@ -53,8 +71,7 @@ dbReadTable(db, "ReceivedEmail") %>%
 Looks like there are a lot of emails that aren't actually reports. Let's filter out the emails that are relevant to us, and give the columns more intuitive names.
 ```{r}
 # read, select interesting data, filter for relevant emails with data, and rename columns
-d <- 
-  dbReadTable(db, "ReceivedEmail") %>% 
+d <- dbReadTable(db, "ReceivedEmail") %>% 
   select(ReceivedDate, Subject, Body) %>% 
   filter( grepl("LS Report", Subject) ) %>% 
   rename(date = ReceivedDate, subject = Subject, body = Body)
@@ -63,7 +80,7 @@ d <-
 d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
 
 # Now we can arrange by date.
-d %>% arrange(date)
+#d %>% arrange(date)
 ```
 
 Oh no! Although these data are arranged by time, we're actaully looking at data from multiple wells! In the body of each observation is a serial number. Let's extract that so we can arrange by it as well before we mine the body of each email for data.
@@ -75,7 +92,7 @@ The body of the emails is complete spaggetti. We need to organize these and writ
 strsplit(d$body[143], "\r\n")
 ```
 
-Create a new 4 column dataframe (datetime, temp, level, id) for each email body, and store in a list. Keep in mind that some email bodies will have more than one level logger.
+Create a new 4 column dataframe (datetime, temp, level, id) for each email body, and store in a list. Keep in mind that some email bodies will have more than one level logger. We do this for one email body to begin with.
 ```{r}
 l <- unlist(strsplit(d$body[100], "\r\n")) # email body as character vector
 
@@ -98,63 +115,84 @@ df$id <-  id # add id
 df
 ```
 
-Generalize for all monitoring wells.
+Now we generalize the above code for all monitoring wells... but first check to see which records contain MW5.
 ```{r}
 mw5 <- ": 283687" # serial number of MW5 (which includes barrologger)
 
 # which records include MW5?
 temp <- sapply(d$body, str_detect, mw5)
 names(temp) <- NULL
-temp
+#temp
+sum(temp) # 182 records contain MW5
 
 # number of serial numbers per email
 temp2 <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
 temp3 <- sapply(temp2, function(x){length(x[str_detect(x, "Serial: ")])})
 data.frame(mw_5 = temp, n_serial = temp3) # visualize 
-temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+temp4 <- temp2[temp3==1] # Oneto Denir well doesn't have a serial number...
+length(temp4) # sizteen records from Oneto Denir
+```
+
+Generalize for all monitoring wells.
+```{r}
+# strat with temp2, the formatted lines of each email body
+lines <- lapply(d$body, function(x){unlist(strsplit(x, "\r\n"))} )
+
+# serial number for mw5
+mw5 <- ": 283687"
 
 # function to apply
 get_data <- function(v){ 
   
-  l <- unlist(strsplit(d$body[1], "\r\n")) # email body as character vector
+  #v  = lines[[1]]
+  #v2 = lines[[2000]]
+  baro <- NULL # initalize baro vector
+  ss <- sum(str_detect(v, mw5)) # does mw5 appear in the email?
   
-  ss <- sum(str_detect(l, mw5)) # does mw5 appear in the email?
-  
-  # if the well is MW 5, whcih contains a barrologger
-  if (ss =! 0) {
-    id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+  # if well is MW 5
+  if (ss == 1) {
+    id <- v[str_detect(v, "Serial: ")][2]   # 2nd serial is level logger
+    baro <- v[str_detect(v, "Serial: ")][3] # 3rd serial is baro  logger
   }
 
-  # if the well does not contain a barrologger
+  # if the well is not mw5
   if (ss == 0) {
-    
+    id <- v[str_detect(v, "Serial: ")][2] # 2nd serial number is level logger
   }
 
-
-  
-  # get MW serial # 
-  id <- l[str_detect(l, "Serial: ")][2] # 1st serial # == level sender
+  # subset for the levellogger serial number
   id <- as.numeric(substr(id, 9, nchar(id)))
   
+  # if barometric pressure logger is present, get its serial
+  if(!is.null(baro)){baro <- as.numeric(substr(baro, 9, nchar(baro)))}
+  
+  
   # get all datetime, temp, level data
-  i <- str_detect(l, "^[:digit:]") # all lines that begin with a digit
-  ld <- l[i] 
-  ld
+  i <- str_detect(v, "^[:digit:]") # all lines that begin with a digit
+  ld <- v[i] # subset for these lines
   
   # organize into a dataframe
-  m <- str_split_fixed(ld, ", ", 3) # matrix of strings
-  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2)
-  df <- as.data.frame(m)
-  colnames(df) <- c("dt", "temp", "level")
+  m <- str_split_fixed(ld, ", ", 3)          # matrix of strings
+  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2) # round temp and level
+  df <- as.data.frame(m)                     # convert to df
+  colnames(df) <- c("dt", "temp", "level")   # rename columns
   df$dt <- as.POSIXct(strptime(df$dt, format = '%d/%m/%Y %H:%M:%S')) # format dates
   df$id <-  id # add id
   df
   
   
 }
+
+get_data(d$body)
 ```
 
-
+Convert from PSI to meters
+```{r}
+# convert from PSI to meters
+psi_to_m <- function(psi){
+  return(psi * 0.703070)
+}
+```
 
 
 

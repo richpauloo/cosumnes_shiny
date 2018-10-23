@@ -1,6 +1,4 @@
-# Cosumnes River Groundwater Observatory  
-
-**Log of Research activities**  
+# Cosumnes River Groundwater Observatory Research Log
 
 ***
 
@@ -273,6 +271,67 @@ Ocotber 8, 2018
 * Andrew working with Mauricio to get sqlite file on my computer to automatically refresh  
 * Andrew working to get me clean data through August  
 * I will write rules for extracting data through October  
+
+
+***  
+
+October 9, 2018  
+
+* Met with Graham, Laura, Andrew to get on the same page  
+* talked about QAQC:  
+  + discussed using Gmail R client to send email notifications during cleaning if something looks funny in the data (i.e. -  a hydrograph signal with vartiance above some threshold, say 2SD of the distribution of hydrograph values)  
+* include the following information in well popups:  
+  + screened interval depths  
+  + well depth  
+  + whether the well is pumped or not  
+  + some geenral notes per well  
+
+
+* `scratch/popup_CSS.R` shows how to override default leaflet CSS and use mapview CSS in `popupTable`s.  
+* added two .exe files in `clean/rsqlite.Rmd` that refresh the emails and append them to the sqlite database. These need to be run at the top of the cleaning script.  
+* waiting on Chris from IT to set up another home station email so I can refresh the emails coming in from the levelsenders on THIS computer.  
+
+
+***  
+
+Ocotber 15-16 2018  
+
+* Worked with Andrew to set up a new email for my (Rich's) computer.  
+* Andrew transfered a copy of the clean historical data to my computer, and I cleaned this a bit more and pushed it to the sloud SQL database under the table name `clean_historical_data_through_ocotber`.  
+* can retreive emails via R now.  
+* 4 wells reporting. Proceeding with these while Andrew debugs the others.  
+* working on logic to query incoming emails and clean for appending to (now) clean database.  
+
+* reformuated code into two files:  
+    + `00_integrate_andrews_clean_historical_data.Rmd` and  
+    + `01_query_sqlite_clean_and_push_to_cloud_SQL.Rmd`  
+    
+* these will eventually be turned into `.R` files which are sourced every 24 hours.  
+
+* in `01_query_sqlite_clean_and_push_to_cloud_SQL.Rmd`, I:  
+    + define the emails to check as a variable `current`, which includes all emails within 30 days of `Sys.Date()`  
+    + wrote a beautiful function, `get_data()` that takes a vector of lines and returns a clean, formatted `data.frame` with: `datetime`, `temp`, `level`, and `id`.  
+    + this function handles a level sender with two level loggers: one in the water, and one recording barometric pressure  
+    
+
+*** 
+
+October 17, 2018  
+
+* integrate elevation data into cloud database  
+* finalize function to clean emails  
+* automate separation of baro and monitoring well timeseries    
+* convert barometric pressure from PSI to meters  
+* adjust monitoring well data by barometric pressure  
+
+***  
+
+Ocotber 19, 2018
+
+* To do: write a function that grabs battery level from the level loggers, to pair with levelsender battery data.  
+
+
+
 
 
 
