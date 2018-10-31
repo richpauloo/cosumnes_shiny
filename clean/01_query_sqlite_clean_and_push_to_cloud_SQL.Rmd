@@ -31,7 +31,7 @@ Refresh emails and append to sqlite database.
 # simulates clicking the "Retrieve Emails Button"
 system(
   shQuote(
-    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", 
+    "C:/Program Files (x86)/Solinst/LevelSender/LSEmailClient.exe", # file path of email client .exe
     type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
   )
 )
@@ -72,7 +72,7 @@ check <- filter(d, date_2 >= current)
 
 Identify records containing MW5.
 ```{r}
-# serial number for mw5
+# serial number for mw5 level sender
 mw5 <- ": 283687"
 
 # separate each email body into a vector of lines, and store each in a list element
@@ -89,49 +89,88 @@ get_data <- function(v){
   
   # if the well == MW 5
   if (ss == 1) {
-    id <- v[str_detect(v, "Serial: ")][2]    # 2nd serial is level logger
-    baro <- v[str_detect(v, "Serial: ")][3]  # 3rd serial is baro  logger
+    id <- v[str_detect(v, "Serial: ")][1]    # 1st serial is level sender id
+    baro <- v[str_detect(v, "Serial: ")][3]  # 3rd serial is baro  logger id
   }
 
   # if the well != mw5
   if (ss == 0) {
-    id <- v[str_detect(v, "Serial: ")][2]    # 2nd serial number is level logger
+    id <- v[str_detect(v, "Serial: ")][1]    # 1st serial number is level sender id
   }
 
-  # subset for the level logger serial number
+  # subset for the level logger serial number by string position "Serial: #######"
   id <- as.numeric(substr(id, 9, nchar(id)))
   
   # if barometric pressure logger is present, get its serial
   if(!is.null(baro)){baro <- as.numeric(substr(baro, 9, nchar(baro)))}
-  
-  # get all datetime, temp, level data
-  i <- str_detect(v, "^[:digit:]")           # all lines that begin with a digit
-  ld <- v[i]                                 # subset for these lines
-  
-  # organize into a dataframe
-  m <- str_split_fixed(ld, ", ", 3)          # matrix of strings
-  m[, 2:3] <- round(as.numeric(m[, 2:3]), 2) # round temp and level
-  df <- as.data.frame(m)                     # convert to df
-  colnames(df) <- c("dt", "temp", "level")   # rename columns
-  df$dt <- dmy_hms(df$dt)                    # format dates
+
   
   # if the well == MW 5
   if (ss == 1) {
-    df$id <- rep(c(id, baro), each = nrow(df)/2) # add ids of ll and baro logger
+    
+    # starting and ending index of logger 1 (monitoring well)
+    mw_0 <- str_which(v, "Logger 1 Samples") + 2
+    mw_n <- str_which(v, "Logger 2 Samples") - 2
+    
+    # starting and ending index of logger 2 (baro logger)
+    bl_0 <- str_which(v, "Logger 2 Samples") + 2
+    bl_n <- str_which(v, "MESSAGES: Email report") - 2
+    
+    # organize into a dataframe
+    v1 <- v[mw_0:mw_n]                           # monitoring well lines 
+    v2 <- v[bl_0:bl_n]                           # barologger lines
+    m1 <- str_split_fixed(v1, ", ", 3)           # matrix of mw strings
+    m2 <- str_split_fixed(v2, ", ", 3)           # matrix of baro strings
+    m1[, 2:3] <- round(as.numeric(m1[, 2:3]), 2) # round temp and level
+    m2[, 2:3] <- round(as.numeric(m2[, 2:3]), 2) # round temp and level
+    
+    df <- rbind.data.frame(m1, m2)               # convert to df
+    colnames(df) <- c("dt", "temp", "level")     # rename columns
+    df$dt <- dmy_hms(df$dt)                      # format dates
+    
+    # add ids
+    df$id <- rep(c(id, baro), times = c(length(v1), length(v2)))
+    
+    # finagle the object classes
+    df$temp <- as.numeric(levels(df$temp)[df$temp])
+    df$level <- as.numeric(levels(df$level)[df$level])
+    #df$id <- factor(df$id)
+    
   }
 
   # if the well != mw5
   if (ss == 0) {
-    df$id <- id # add id of level logger
+    
+    # starting and ending index of logger 1 (monitoring well)
+    mw_0 <- str_which(v, "Logger 1 Samples") + 2
+    mw_n <- str_which(v, "MESSAGES: Email report") - 2
+    
+    
+    # organize into a dataframe
+    v1 <- v[mw_0:mw_n]                           # monitoring well lines 
+    m1 <- str_split_fixed(v1, ", ", 3)           # matrix of mw strings
+    m1[, 2:3] <- round(as.numeric(m1[, 2:3]), 2) # round temp and level
+    
+    df <- as.data.frame(m1)                      # convert to df
+    colnames(df) <- c("dt", "temp", "level")     # rename columns
+    df$dt <- dmy_hms(df$dt)                      # format dates
+    
+    # add ids
+    df$id <- id
+    
+    # finagle the object classes
+    df$temp <- as.numeric(levels(df$temp)[df$temp])
+    df$level <- as.numeric(levels(df$level)[df$level])
+    #df$id <- factor(df$id)
   }
   
   return(df)
 }
 
 # 
-# v = lines[[1]] # non-MW5
+#v = lines[[1]] # non-MW5
 # v = lines[[6]]  # MW5
-# v = lines[[195]] # non-equal ... need to save extra baro without filtering it out
+# v = lines[[195]] # MW5 non-equal ... need to save extra baro without filtering it out
 # another one is broken between 180 and 195... find it!
 # get_data(v)
 ```
@@ -140,15 +179,57 @@ get_data <- function(v){
 Apply function to all `lines` from `current` data.
 ```{r}
 # apply function to list of current emails
-dfs <- lapply(lines[1:180], get_data) # temp until non-equal issue is fixed
+dfs <- lapply(lines, get_data) # temp until non-equal issue is fixed
 
 # bind all dfs together
 all <- do.call(rbind, dfs)
 
-# finagle the object classes
-all$level <- as.numeric(levels(all$level)[all$level])
-all$id <- factor(all$id)
+# omit erronous values input when a measurement error is made
+all <- filter(all, level < 1000)
 ```
+
+
+Temporary--delete after Andrew replaces LS batteries. Then go into the database and fix these values... or somehow only append data that's new, while keeping the old "golden" data in the Cloud SQL db.
+```{r}
+#all <- filter(all, dt < ymd_hms("2018-10-18 00:00:00 UTC"))
+```
+
+Outage Hot Fixes. This will unfortunately be a messy part of the data cleaning pipeline.    
+
+Battery outages in the LevelSender throw impossible values at the temp and level, e.g. - level = 0.00. Never let battery outages in the LS happen again because this hot fix actually takes some time. It requires downloading the Level Logger data, and manually inserting it into the database. When this does unfortunately happen you should:  
+
+IN THE FIELD:  
+
+1. Immediately change the batteries in the dead LS. Reported values will be noticably low and impossible (e.g. - level = -0.1 or 0.0).  
+
+***  
+
+IN THIS CLEANING SCRIPT (only after the field is done):  
+
+2. Identify the start and end times of the outage, and omit from the data in this script.  
+3. Separately, extract this same data range from the levelloggers, and upload into the script to replace the now extracted data with impossible values caused by the outage.  
+4. Repeat for every new battery outage.  
+
+```{r}
+# October 2018 MW5 OUTAGE with affected the baro and water level loggers
+out_ls_id <- c(283687, 2038232) # ids of the baro and water 
+
+# Identify the start and end times of the outage, and omit from the data in this script. 
+all %>% filter(id %in% out_ls_id) %>% arrange(dt) 
+
+# define the outage window
+# find the start and end times of the outage 
+# (I went for the entire 24 hour span to make it easier to undertand in terms of days out)
+outage_start <- ymd_hms("2018-10-18 00:00:00") # outage start
+outage_end   <- ymd_hms("2018-10-29 23:00:00") # outage end
+
+# omit the records in the window of the outage
+all <- all %>% 
+  filter( !(id %in% out_ls_id & dt >= outage_start & dt <= outage_end) )
+
+# 
+```
+
 
 
 Separate barologger and monitoring well data. 
@@ -157,27 +238,25 @@ Separate barologger and monitoring well data.
 baro_serial <- "2038232"
 
 # barometric timeseries
-baro_data <- 
-  filter(all, id == baro_serial) %>% 
-  arrange(dt) %>% 
-  mutate(level = as.numeric(level),
-         id = as.factor(id))
+baro_data <- filter(all, id == baro_serial)  
 
 # monitoring well timeseries
-mw_data <- 
-  filter(all, id != baro_serial) %>% 
-  arrange(dt) %>% 
-  mutate(level = as.numeric(level),
-         id = as.factor(id))
+mw_data <- filter(all, id != baro_serial) 
 
 # monitoring well timeseries with corresponding barometric data
 mw_data <- filter(mw_data, dt %in% baro_data$dt)
-
-# visualize 
-mw_data %>% ggplot(aes(dt, level, color = id)) + geom_line()
-baro_data %>% ggplot(aes(dt, level)) + geom_line()
 ```
 
+
+Visualize me and baro timeseries. Can delete once app is running.
+```{r}
+# visualize
+mw_data %>% ggplot(aes(dt, level, color = factor(id))) + geom_line()
+
+baro_data %>%
+  #filter(level > 0) %>%
+  ggplot(aes(dt, level, color = factor(id))) + geom_line()
+```
 
 
 ***  
@@ -209,41 +288,45 @@ Adjust monitoring well levels by barometric data.
 ```{r}
 # rename columns in baro and mw data to remove ambiguity, drop id in baro data
 baro_data <- rename(baro_data, level_baro = level) %>% select(-id)
-mw_data   <- rename(mw_data,   level_mw = level,   mw_id = id)
+mw_data   <- rename(mw_data,   level_mw = level,   ls_id = id)
 
 # join baro and mw databy datetime, calculate adjusted water level
 adj_data <- left_join(baro_data, mw_data, by = "dt") %>% 
-  mutate(adj_level = level_mw - level_baro) # is this correct?
+  mutate(adj_level = level_mw - level_baro) 
 ```
 
 
 Adjust by elevation.
 ```{r}
-# read in elevation data
-elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/andrew_clean_data/elev.csv")
-
-# add level logger ids
-elev$mw_id <- c("1065731","1055097","1065751","2083804")
+# read in elevation data from github
+elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
+#elev <- read_csv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/andrew_clean_data/elev.csv")
 
 # find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
-ll_1065731 <- filter(adj_data, mw_id == "1065731" & dt <= mdy_hm("10/12/2018 14:54"))[1, "adj_level"]
-ll_1055097 <- filter(adj_data, mw_id == "1055097" & dt <= mdy_hm("10/12/2018 11:31"))[1, "adj_level"]
-ll_1065751 <- filter(adj_data, mw_id == "1065751" & dt <= mdy_hm("10/12/2018 13:37"))[1, "adj_level"]
-ll_2083804 <- filter(adj_data, mw_id == "2083804" & dt <= mdy_hm("10/12/2018 16:03"))[1, "adj_level"]
+
+ls_ids <- unique(mw_data$ls_id) # vector of LS ids
+  
+calc_cable_length <- function(x){
+  i     <- which(elev$ls_id == x)           # row index of level sender
+  dolm  <- mdy_hm(elev$date_of_last_dtw_measurement[i])  # date of last measurement for LS
+  dolml <- filter(adj_data, ls_id == x & dt <= dolm)[1, "adj_level"] # level at dolm
+  return(dolml)
+}
+
+# combine ls ids and water levels at measurement date
+key <- data.frame(ls_id = ls_ids,
+                  wls   = sapply(ls_ids, calc_cable_length))
+
 
 # calculate effective cable length from measured depth to water (every 3 months) 
 # and actual water level above transducer at the date when water was measured ^^
-elev$cable_length <- elev$dtw_m + c(ll_1065731, ll_1055097, ll_1065751, ll_2083804)
+# (still needs to be adjusted by 9.5m)
+temp <- left_join(elev, key, by = "ls_id") %>% 
+  mutate(cable_length = dtw_m + wls)
 
-elev
-############################
-############################
-# Pick up on Friday with Andrew
-############################
-############################
 
-# create a key for which wells subtract 9.5 meters for barometic pressure
-adj_data <- left_join(adj_data, elev, by = "mw_id") 
+# updat adjusted data
+adj_data <- left_join(adj_data, temp, by = "ls_id") 
 
 adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
                                                 9.5 + adj_level, 
@@ -252,6 +335,12 @@ adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE,
 
 # add water elevation and subtract cable length to find final water level
 adj_data <- mutate(adj_data, final_level = adj_level + elev_m - cable_length) 
+```
+
+
+Visualize final level. Remove later.
+```{r}
+adj_data %>% ggplot(aes(dt, final_level, color = factor(ls_id))) + geom_line()
 ```
 
 

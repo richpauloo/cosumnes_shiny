@@ -326,16 +326,48 @@ October 17, 2018
 
 ***  
 
-Ocotber 19, 2018
+Ocotber 22-23, 2018
 
-* To do: write a function that grabs battery level from the level loggers, to pair with levelsender battery data.  
-
-
-
-
-
+* completed cleaning script!  
+* methods for adjusting final water levels by the elevation and cable length will be documented by Andrew, but they are implemented in the code in `01_query_sqlite_clean_and_push_to_cloud_SQL`.  
+* Batteries for Level Senders fail around 60%. This is noted for the email triggers to be set later in the batch file. Some data from 10/18 onwards in MW5 needs to be updated...
+    + the appending should be flexible enough to not break if the batteries for a well go out, we fix the records in the cloud db, and then new emails come in with new data. Think about solving this.  
 
 
+***  
+
+October 31, 2018  
+
+* blocked by 3-day UC Water conference last week and hardware failing (low battery in MW5)  
+* develop protocol to deal with battery outages and the resulting mess they cause:  
+
+## Outage Hot Fixes. This will unfortunately be a messy part of the data cleaning pipeline.    
+
+Battery outages in the LevelSender throw impossible values at the temp and level, e.g. - level = 0.00. Never let battery outages in the LS happen again because this hot fix actually takes some time. It requires downloading the Level Logger data, and manually inserting it into the database. When this does unfortunately happen you should:  
+
+### IN THE FIELD:  
+
+1. Immediately change the batteries in the dead LS. Reported values will be noticably low and impossible (e.g. - level = -0.1 or 0.0).  
+
+***  
+
+### IN THE CLEANING SCRIPT (only after the field is done):  
+
+2. Identify the outage window and omit these data: find start and end times of the outage, and filter out.  
+3. Separately, extract the unobstructed data from the levelloggers data range from the levelloggers, and upload into the script to replace the now extracted data with impossible values caused by the outage.  
+4. Repeat for every new battery outage. 
+
+
+* battery changes in level senders also require a hotfix. This can probably be scripted in and controlled by an external CSV.  
+
+
+* To do: write a function that grabs battery level from the level senders and loggers and puts in a table. This table will be used by the shiny app.  
+    + set trigger to send emails when levelsender batteries <= 70%  
+    + 
+
+
+
+* Put somewhere on dashboard: Hydrograph values may reflect anomolies or errors. If you believe you see an error, please contact the app author for calification.  
 
 
     
