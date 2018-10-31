@@ -339,7 +339,7 @@ Ocotber 22-23, 2018
 October 31, 2018  
 
 * blocked by 3-day UC Water conference last week and hardware failing (low battery in MW5)  
-* develop protocol to deal with battery outages and the resulting mess they cause:  
+* develop protocol to deal with battery outages, and a high-level CSV `battery_outages.csv` that and the resulting mess they require:  
 
 ## Outage Hot Fixes. This will unfortunately be a messy part of the data cleaning pipeline.    
 
@@ -351,14 +351,23 @@ Battery outages in the LevelSender throw impossible values at the temp and level
 
 ***  
 
-### IN THE CLEANING SCRIPT (only after the field is done):  
+### IN THE GITHUB REPO (only possible after the field is done):  
 
-2. Identify the outage window and omit these data: find start and end times of the outage, and filter out.  
-3. Separately, extract the unobstructed data from the levelloggers data range from the levelloggers, and upload into the script to replace the now extracted data with impossible values caused by the outage.  
-4. Repeat for every new battery outage. 
+2. Identify the outage window and omit these data and record in `clean/dependencies/ls_battery_outages.csv`  
+3. Separately, extract the unobstructed data from the levelloggers during the outage window, and upload the raw (unadjusted) levels into `clean/dependencies/ls_recovered_data.csv`  
+4. 
+5. Repeat for every new battery outage.  
+
+
+
 
 
 * battery changes in level senders also require a hotfix. This can probably be scripted in and controlled by an external CSV.  
+`clean/dependencies/ll_battery_outages.csv`
+
+
+
+
 
 
 * To do: write a function that grabs battery level from the level senders and loggers and puts in a table. This table will be used by the shiny app.  

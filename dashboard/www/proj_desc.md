@@ -4,9 +4,7 @@ output:
     css: styles.css
 ---
 
-<img src="www/oneto_site_pic.jpg" alt="Drawing" style="width: 100%;"/>    
-
-This section will be retitled Project Description.  
+<img src="C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/www/oneto_site_pic.jpg" alt = "Study" style="width: 100%;"/>   
 
 The UC Water Security and Sustainability Research Initiative is increasing data accessibility for people in control of California's groundwater management. To do this, UC Water Masters student Alysa Yoder and UC Water Director Dr. Graham Fogg have designed and implemented a groundwater observatory covering the South American River sub-basin. 
 

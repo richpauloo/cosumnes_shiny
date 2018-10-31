@@ -41,14 +41,14 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	
 	# row 3
 	fluidRow(
-		column(2, actionButton("help_loc_btn", "Site Info", class="btn-block"), br()),
-		column(2, actionButton("help_rcp_btn", "Recharge", class="btn-block")),
+		column(2, actionButton("help_loc_btn", "Project Description", class="btn-block"), br()),
+		column(2, actionButton("help_rcp_btn", "Groundwater Recharge", class="btn-block")),
 		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
-	bsModal("modal_loc", "Site Information", "help_loc_btn", size="large",
-		includeMarkdown("www/site_info.md")),
+	bsModal("modal_loc", "Project Description", "help_loc_btn", size="large",
+		includeMarkdown("www/proj_desc.md")),
 	
-	bsModal("modal_rcp", "Floodplain Recharge", "help_rcp_btn", size="large",
+	bsModal("modal_rcp", "Groundwater Recharge", "help_rcp_btn", size="large",
 		includeMarkdown("www/recharge_info.md"))
 	),
 	

@@ -212,33 +212,18 @@ IN THIS CLEANING SCRIPT (only after the field is done):
 
 ```{r}
 # October 2018 MW5 OUTAGE with affected the baro and water level loggers
-out_window <- read_csv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_battery_outages.csv")
+out_window <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_battery_outages.txt")
 
-out_ls_id <- c(283687, 2038232) # ids of the baro and water 
-
-# Identify the start and end times of the outage, and omit from the data in this script. 
-all %>% filter(id %in% out_ls_id) %>% arrange(dt) 
-
-# define the outage window
-# find the start and end times of the outage 
-# (I went for the entire 24 hour span to make it easier to undertand in terms of days out)
-outage_start <- ymd_hms("2018-10-18 00:00:00") # outage start
-outage_end   <- ymd_hms("2018-10-29 23:00:00") # outage end
-
-# omit the records in the window of the outage
-all <- all %>% 
-  filter( !(id %in% out_ls_id & dt >= outage_start & dt <= outage_end) )
-
+# omit the data from these outage wells within the outage window 
 for(i in nrow(out_window)){
   all <- all %>% 
-    filter( !(id %in% out_window$ls_id & 
-              dt >= outage_start & 
-              dt <= outage_end) 
+    filter( !(id == out_window$ls_id[i] & 
+              dt >= out_window$out_start[i] & 
+              dt <= out_window$out_end[i]) 
           )
 }
 
-
-# 
+#  
 ```
 
 

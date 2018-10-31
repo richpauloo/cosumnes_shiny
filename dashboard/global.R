@@ -51,10 +51,10 @@ cs_coords$hover_text <- mapply(
 
 ##############################################################################
 
-# bring in clean test data for now - need to experiment with .RData in SQL
-#load("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/well_dat_daily.RData")
-#load("data/well_dat_daily.RData")
-#well_dat_daily <- well_dat_daily %>% as.data.frame()
+#bring in clean test data for now - need to experiment with .RData in SQL
+load("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/well_dat_daily.RData")
+# load("data/well_dat_daily.RData")
+well_dat_daily <- well_dat_daily %>% as.data.frame()
 
 ##############################################################################
 
@@ -63,7 +63,8 @@ caption <- 'These monitoring wells reflect the water table elevation in the Sout
 
 
 # read password for SQL database with groundwater level
-pw <- read_rds("data/pw.rds")
+pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
+# pw <- read_rds("data/pw.rds")
 
 # connect to UC Davis MySQL db
 con <- dbConnect(RMySQL::MySQL(),
@@ -74,20 +75,20 @@ con <- dbConnect(RMySQL::MySQL(),
                  port = 33306)
 
 # query MySQL db
-df <- dbReadTable(con, "test")
+df <- dbReadTable(con, "clean_historical_data_through_october")
 
 # fix dates
-dates <- as.POSIXct( strptime(df$Date, format = '%Y-%m-%d %H:%M:%S') ) # format changes between mySWL writing and reading
+dates <- as.POSIXct( strptime(df$date, format = '%Y-%m-%d %H:%M:%S') ) # format changes between mySWL writing and reading
 
 # reorganize 
-cs_hydro_long <- gather(df, well, head, -Date)
+cs_hydro_long <- gather(df, well, head, -date)
 
-cs_hydro_long$Date <- dates # recycling makes this work
+cs_hydro_long$date <- dates # recycling makes this work
 
 
 # scratch
 grouped_heads <- cs_hydro_long %>%
-  group_by(Date) %>%
+  group_by(date) %>%
   summarise(mean = mean(head, na.rm = TRUE),
             min = min(head, na.rm = TRUE),
             max = max(head, na.rm = TRUE))
