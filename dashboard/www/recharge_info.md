@@ -4,13 +4,17 @@ output:
     css: styles.css
 ---
 
-<img src="www/temp_schematic.gif" alt="Drawing" style="width: 100%;"/>   
+<img src="www/rech_pic.jpg" alt="Drawing" style="width: 100%;"/>   
 
-Here is some information about flood plain recharge that we want to display to our audiences.   
+This section will be retitled Groundwater Recharge. It may be a good idea to make it an option under the umbrella of 'About'. 
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget enim at magna pharetra dignissim. Aliquam egestas sodales purus sed tristique. Nam eget consectetur ligula. Fusce a turpis dui. Donec sagittis malesuada porta. Donec metus felis, porta non nunc vel, finibus malesuada nisi. Vivamus molestie pulvinar imperdiet. Mauris sed felis quis neque vehicula volutpat a eu urna. Praesent eu magna quis nisl ultricies laoreet nec a urna. Phasellus elementum nunc vel dolor ultricies, non eleifend purus consequat. Pellentesque vehicula sit amet dui at sollicitudin. Vestibulum eget orci et enim porttitor feugiat in ac mi. Curabitur augue diam, porttitor sit amet blandit vitae, vehicula vel ligula.  
+Groundwater recharge (also known as aquifer recharge) is the process of water moving from above the ground's surface through the ground until it reaches the underlying aquifer. Groundwater recharge can occur naturally, but it does not always keep up with the rate at which groundwater is pumped for human use. This is groundwater overdraft. Groundwater overdraft can cause undesirable results such as degradation of groundwater quality, land subsidence, and decreases in available water. 
 
-Nullam iaculis id ipsum nec suscipit. Aenean pharetra lorem mollis lobortis laoreet. Pellentesque porta arcu nec porttitor egestas. Phasellus consectetur aliquet urna, eu iaculis lectus commodo sit amet. Sed id ultricies felis. Nulla feugiat arcu in lacus viverra rutrum. Aenean ut imperdiet ligula.  
+Managed Aquifer Recharge
+To mitigate the undesirable results of groundwater overdraft, efforts are being made to force the process of groundwater recharge. This is managed aquifer recharge (MAR). Types of MAR include infiltration ponds, agricultural groundwater banking, injection wells and levee removal. Both agricultural groundwater banking and levee removal are implemented within the South American Sub-basin Groundwater Observatory. 
 
-Etiam tempus consequat ex eu euismod. Fusce et libero posuere, rhoncus dui ac, condimentum tellus. Sed et neque feugiat, finibus erat at, cursus nunc. Proin orci lectus, hendrerit in mattis eu, rutrum ut nisl. In sed arcu sit amet est pharetra rhoncus. Quisque blandit tincidunt diam, eget ultrices diam rhoncus in. Cras aliquam vel eros vitae eleifend. Ut et faucibus justo, vel tincidunt felis. Sed ut sapien a tellus volutpat vestibulum. Proin et nibh varius, mollis ante at, hendrerit tortor. Morbi ac luctus tortor. In tellus libero, ultricies eu convallis sit amet, imperdiet molestie arcu. Nullam eget viverra mi.  
+Agricultural Groundwater Banking MAR
+Agricultural groundwater banking  (AGB) is the process of ponding water on crop lands during the off season with the intention to recharge the underlying aquifer system. This type of managed aquifer recharge is often convenient because agricultural areas are equipped with irrigation infrastructure. An AGB MAR project has been implemented in collaboration with the South American River Sub-basin Groundwater Observatory on the Kautz Vineyard properties. Dr. Laura Foglia is the lead on the project, she is working in collaboration with other scientists from UC Davis, UC Santa Cruz and Sacramento State University to investigate the physical processes associated with AGB MAR. The project investigates the chemical and physical affects that MAR has on the groundwater system.
 
+Levee Removal MAR
+Levee removal MAR was implemented on the Cosumnes River at The Nature Conservancy's Oneto-Denier property near Galt, CA as a part of a levee-breach restoration project. Several sections of levee were strategically removed to reintroduce flooding. In addition to ecological benefits from floodplain reconnection, higher rates of aquifer recharge were observed. These aquifer recharge rates were observed after analyzing data from the South American Sub-basin Groundwater Observatory. 
