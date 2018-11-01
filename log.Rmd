@@ -355,7 +355,7 @@ Battery outages in the LevelSender throw impossible values at the temp and level
 
 2. Identify the outage window and omit these data and record in `clean/dependencies/ls_battery_outages.csv`  
 3. Separately, extract the unobstructed data from the levelloggers during the outage window, and upload the raw (unadjusted) levels into `clean/dependencies/ls_recovered_data.csv`  
-4. 
+4. Merge the recovered data.  
 5. Repeat for every new battery outage.  
 
 

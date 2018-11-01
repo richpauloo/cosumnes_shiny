@@ -215,14 +215,13 @@ IN THIS CLEANING SCRIPT (only after the field is done):
 out_window <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_battery_outages.txt")
 
 # omit the data from these outage wells within the outage window 
-for(i in nrow(out_window)){
-  all <- all %>% 
-    filter( !(id == out_window$ls_id[i] & 
-              dt >= out_window$out_start[i] & 
-              dt <= out_window$out_end[i]) 
-          )
+for(i in 1:nrow(out_window)){
+  all <- filter(all, !(id == out_window$ls_id[i] & 
+                       dt >= out_window$out_start[i] & 
+                       dt <= out_window$out_end[i]))
 }
 
+all %>% arrange(level) # it works!
 #  
 ```
 
