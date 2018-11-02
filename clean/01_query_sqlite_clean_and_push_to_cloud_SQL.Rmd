@@ -38,13 +38,10 @@ system(
 ```
 
 
-Connect to .sqlite database, and list the tables of data within.
+Connect to .sqlite database, and list the tables of data in it.
 ```{r}
 # connect to SQLite database that Solinist regularly updates
 db <- dbConnect(SQLite(), dbname = "C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite")
-
-# get metadata about level senders
-meta <- dbReadTable(db, "LevelSenderSettings")
 
 # read emails, select interesting data, filter for relevant emails with data, and rename columns
 d <- dbReadTable(db, "ReceivedEmail") %>% 
@@ -57,7 +54,7 @@ d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
 ```
 
 
-Filter for all emails within a 30 day window of the current date.
+Filter for all emails within a 120 day window of the current date.
 ```{r}
 # 30 day rolling window
 current <- Sys.Date() - 30
@@ -167,8 +164,8 @@ get_data <- function(v){
   return(df)
 }
 
-# 
-#v = lines[[1]] # non-MW5
+# diagnostics
+# v = lines[[1]] # non-MW5
 # v = lines[[6]]  # MW5
 # v = lines[[195]] # MW5 non-equal ... need to save extra baro without filtering it out
 # another one is broken between 180 and 195... find it!
@@ -186,6 +183,9 @@ all <- do.call(rbind, dfs)
 
 # omit erronous values input when a measurement error is made
 all <- filter(all, level < 1000)
+
+# save immediately checked email for battery df later
+use_for_bat <- all
 ```
 
 
@@ -222,7 +222,17 @@ for(i in 1:nrow(out_window)){
 }
 
 all %>% arrange(level) # it works!
-#  
+
+# read in recovered data and append to all
+recovered_data <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_recovered_data.txt")
+
+# reorderfor merge
+recovered_data <- rename(recovered_data, id = ls_id) %>% select(dt, temp, level, id)
+
+# merge
+all <- bind_rows(all, recovered_data)
+
+all %>% ggplot(aes(dt, level, color = factor(id))) + geom_line()
 ```
 
 
@@ -239,7 +249,7 @@ baro_data <- filter(all, id == baro_serial)
 mw_data <- filter(all, id != baro_serial) 
 
 # monitoring well timeseries with corresponding barometric data
-mw_data <- filter(mw_data, dt %in% baro_data$dt)
+#mw_data <- filter(mw_data, dt %in% baro_data$dt)
 ```
 
 
@@ -281,21 +291,27 @@ baro_data$level <- psi_to_m(baro_data$level)
 
 Adjust monitoring well levels by barometric data.
 ```{r}
-# rename columns in baro and mw data to remove ambiguity, drop id in baro data
-baro_data <- rename(baro_data, level_baro = level) %>% select(-id)
-mw_data   <- rename(mw_data,   level_mw = level,   ls_id = id)
+# rename columns in baro and mw data to remove ambiguity, drop id in baro data, round to nearest hour
+baro_data <- rename(baro_data, level_baro = level) %>% select(-id) %>% 
+  mutate(dt = round_date(dt, unit = "hour"))      # round to nearest hour
+         
+mw_data   <- rename(mw_data, level_mw = level, ls_id = id) %>% 
+  mutate(dt = round_date(dt, unit = "hour")) # round to nearest hour
 
 # join baro and mw databy datetime, calculate adjusted water level
-adj_data <- left_join(baro_data, mw_data, by = "dt") %>% 
-  mutate(adj_level = level_mw - level_baro) 
+adj_data <- left_join(mw_data, baro_data, by = "dt") %>% 
+  mutate(level_baro = zoo::na.approx(level_baro), # linear interpolation of missing values
+        adj_level = level_mw - level_baro)        # adjusted level
+
+#adj_data %>% ggplot(aes(dt, adj_level, color = factor(ls_id))) + geom_line()
 ```
 
 
 Adjust by elevation.
 ```{r}
 # read in elevation data from github
-elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
-#elev <- read_csv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/andrew_clean_data/elev.csv")
+#elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
+elev <- read_csv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/andrew_clean_data/elev.csv")
 
 # find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
 
@@ -305,6 +321,11 @@ calc_cable_length <- function(x){
   i     <- which(elev$ls_id == x)           # row index of level sender
   dolm  <- mdy_hm(elev$date_of_last_dtw_measurement[i])  # date of last measurement for LS
   dolml <- filter(adj_data, ls_id == x & dt <= dolm)[1, "adj_level"] # level at dolm
+  
+  if(is.na(dolml)){
+    dolml <- filter(adj_data, ls_id == x & dt >= dolm)[1, "adj_level"] # level at dolm
+  }
+  
   return(dolml)
 }
 
@@ -320,7 +341,7 @@ temp <- left_join(elev, key, by = "ls_id") %>%
   mutate(cable_length = dtw_m + wls)
 
 
-# updat adjusted data
+# update adjusted data
 adj_data <- left_join(adj_data, temp, by = "ls_id") 
 
 adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
@@ -330,16 +351,24 @@ adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE,
 
 # add water elevation and subtract cable length to find final water level
 adj_data <- mutate(adj_data, final_level = adj_level + elev_m - cable_length) 
+
+# grab subset of data to append to cloud db
+rows_to_append <- select(adj_data, dt, ls_id, final_level) %>% rename(id = ls_id, level = final_level)
 ```
 
 
 Visualize final level. Remove later.
 ```{r}
 adj_data %>% ggplot(aes(dt, final_level, color = factor(ls_id))) + geom_line()
+baro_data  %>% ggplot(aes(dt, level_baro)) + geom_line()
 ```
 
 
-Connect to cloud database. 
+***
+
+# Write Transformed Data to Cloud DB
+
+Connect to cloud database.
 ```{r}
 # password for gw obs db
 pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
@@ -354,49 +383,43 @@ cdb <- dbConnect(RMySQL::MySQL(),
 ```
 
 
-Read the elevation table, and adjust well levels by their elevation.
-```{r}
-elev <- dbReadTable(cdb, "elevation_data")
-
-```
-
-
-***
-
-# Write Transformed Data to Cloud DB
-
-Read the present data, define classes, append new data, and filter for the unique rows.
+Read the present data, define object classes, append new data, and filter for the unique rows.
 ```{r}
 # most current data
-present <- dbReadTable(cdb, "present")
+present <- dbReadTable(cdb, "present2")
 
 # fix class of dates and levels in present data
-present$date <- ymd_hms(present$date)
+present$dt <- ymd_hms(present$dt)
+
+# merege well name and LS id
+# ls_id_key <- data.frame(well = c("SWL.11","SWL.19","SWL.22","SWL.5","SWL.9","SWL.DR1","SWL.Rooney1","SWL.UCD26"),
+#                         id   = c(284216, 284214, 284217, 283687, 284220, 284227, 284215, 284197))
+
 present <- present %>% 
-  gather(well, level, -date) %>% 
+  gather(id, level, -dt) %>% 
   mutate(level = as.numeric(level)) %>% 
-  spread(well, level)
+  #left_join(ls_id_key, by = "well") %>% 
+  select(dt, id, level) 
 
-# convert variables into correct classes
-gather(present, well, level, -Date) %>%  
-  rename(date = Date) %>%                 # rename date column
-  mutate(date = mdy_hm(date),             # convert date to datetime
-         level = as.numeric(level)) %>%   # convert level to numeric
-  filter(level < 1000)                    # filter erroneous large values
-
-# append new data
-rbind()
-
-# gather 
+#present <- spread(present, id, level)
 
 
+# change ids so the join can occur
+rows_to_append$id <- paste0("X", rows_to_append$id)     
 
+# append new data and trim overlapping data
+complete <- bind_rows(present, rows_to_append) %>% 
+  distinct(dt, id, .keep_all = TRUE)
+
+# cast back into wide format for shiny app and smaller data.frame
+complete <- spread(complete, key = "id", value = "level")
 ```
 
 
 Overwrite the `present` data in the cloud database.  
 ```{r}
-
+# write 2 tables to database: overwrite existing "present" table, and stash a snapshot of the current table
+dbWriteTable(cdb, "present2", complete, overwrite = TRUE) # overwrite existing table
 ```
 
 
@@ -408,30 +431,97 @@ save_days <- seq(8,365, 7)
 # get day of the year
 doy <- yday(Sys.Date())
 
-# if present day is a save day, save a version of the database
+# if present day is a save day, save a version of the database with name = today's date
 if(doy %in% save_days == TRUE){
-  dbWriteTable(cdb, 
-               name = Sys.Date(),
-               value = appended_unique)
+  
+  # format system date, which serves as the table name
+  todays_date <- as.character(Sys.Date()) %>% str_replace_all(., pattern = "-", replacement = "_")
+  
+  # write the table
+  dbWriteTable(cdb, todays_date, complete)
 }
 ```
 
 
-Save this data to the cloud databse.
+Find most recent email, get the battery life of LS, LL and baro (if MW5), and save to a table in cloud db.
 ```{r}
-dbWriteTable(cdb, 
-             name = "present",
-             value = appended_unique)
+# find most recent email subject lines
+most_recent_email_subject <- 
+  separate(d, subject, into = c("id", "ls", "report", "report_num")) %>% 
+  select(date, id, report_num) %>% 
+  mutate(report_num = as.numeric(report_num)) %>% 
+  group_by(id) %>% 
+  top_n(n = 1, wt = date) %>% 
+  distinct() %>% 
+  filter(id %in% unique(mw_data$ls_id)) %>% 
+  mutate(find = paste(id, "LS Report", report_num)) %>% 
+  pull(find)
 ```
+
+
+```{r}
+# extract most recent emails
+most_recent_emails <- d[d$subject %in% most_recent_email_subject, ]
+
+battery_lines <- lapply(most_recent_emails$body, function(x){unlist(strsplit(x, "\r\n"))} )
+
+# function to apply
+get_bat_life <- function(v){ 
+
+  # does mw5 appear in the email? 
+  ss <- sum(str_detect(v, mw5)) 
+  
+  # extract and clean id and battery lines
+  id       <- v[str_detect(v, "Serial: ")][1]      # 1st serial is level sender id
+  id       <- as.numeric(substr(id, 9, nchar(id))) # numeric
+  battery  <- v[str_detect(v, "Battery: ")]        # battery life for LS and 2 LLs
+    
+  # get battery of LS, LL, and barologger
+  battery_vals <- substr(battery, 9, nchar(battery)-1) %>% as.numeric()
+    
+  # make into df
+  bat_df <- data.frame(id   = paste0("X", id),
+                         bat  = battery_vals)
+                       
+  # if the well == MW 5
+  if (ss == 1) {
+    bat_df$unit <- c("Sender", "Logger","Baro")
+  }
+
+  # if the well != mw5
+  if (ss == 0) {
+    bat_df$unit <- c("Sender", "Logger")
+  }
+
+  
+  return(bat_df)
+}
+
+# diagnostics
+# v = lines[[1]] # non-MW5
+# v = lines[[7]] # MW5
+# v
+
+
+get_bat_life(battery_lines)
+
+
+  
+```
+
+
+If the battery life for any LS or LL is below 
+
+
 
 
 
 
 Disconnect from SQLite and cloud SQL databases.
 ```{r}
-# disconnect
-dbDisconnect(db)
-dbDisconnect(cdb)
+# disconnect from SQlite and cloud SQL dbs
+dbDisconnect(db)  # SQLite
+dbDisconnect(cdb) # cloud SQL
 ```
 
 
