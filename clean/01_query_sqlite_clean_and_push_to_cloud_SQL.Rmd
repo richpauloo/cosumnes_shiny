@@ -311,38 +311,38 @@ Adjust by elevation.
 ```{r}
 # read in elevation data from github
 #elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
-elev <- read_csv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/andrew_clean_data/elev.csv")
+elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt")
 
 # find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
 
-ls_ids <- unique(mw_data$ls_id) # vector of LS ids
+# ls_ids <- unique(mw_data$ls_id) # vector of LS ids
   
-calc_cable_length <- function(x){
-  i     <- which(elev$ls_id == x)           # row index of level sender
-  dolm  <- mdy_hm(elev$date_of_last_dtw_measurement[i])  # date of last measurement for LS
-  dolml <- filter(adj_data, ls_id == x & dt <= dolm)[1, "adj_level"] # level at dolm
-  
-  if(is.na(dolml)){
-    dolml <- filter(adj_data, ls_id == x & dt >= dolm)[1, "adj_level"] # level at dolm
-  }
-  
-  return(dolml)
-}
+# calc_cable_length <- function(x){
+#   i     <- which(elev$ls_id == x)           # row index of level sender
+#   dolm  <- mdy_hm(elev$date_of_last_dtw_measurement[i])  # date of last measurement for LS
+#   dolml <- filter(adj_data, ls_id == x & dt <= dolm)[1, "adj_level"] # level at dolm
+#   
+#   if(is.na(dolml)){
+#     dolml <- filter(adj_data, ls_id == x & dt >= dolm)[1, "adj_level"] # level at dolm
+#   }
+#   
+#   return(dolml)
+# }
 
 # combine ls ids and water levels at measurement date
-key <- data.frame(ls_id = ls_ids,
-                  wls   = sapply(ls_ids, calc_cable_length))
+# key <- data.frame(ls_id = ls_ids,
+#                   wls   = sapply(ls_ids, calc_cable_length))
 
 
 # calculate effective cable length from measured depth to water (every 3 months) 
 # and actual water level above transducer at the date when water was measured ^^
 # (still needs to be adjusted by 9.5m)
-temp <- left_join(elev, key, by = "ls_id") %>% 
-  mutate(cable_length = dtw_m + wls)
+# temp <- left_join(elev, key, by = "ls_id") %>% 
+#   mutate(cable_length = dtw_m + wls)
 
 
 # update adjusted data
-adj_data <- left_join(adj_data, temp, by = "ls_id") 
+adj_data <- left_join(adj_data, elev, by = "ls_id") 
 
 adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
                                                 9.5 + adj_level, 
@@ -386,7 +386,7 @@ cdb <- dbConnect(RMySQL::MySQL(),
 Read the present data, define object classes, append new data, and filter for the unique rows.
 ```{r}
 # most current data
-present <- dbReadTable(cdb, "present2")
+present <- dbReadTable(cdb, "present")
 
 # fix class of dates and levels in present data
 present$dt <- ymd_hms(present$dt)
@@ -419,7 +419,7 @@ complete <- spread(complete, key = "id", value = "level")
 Overwrite the `present` data in the cloud database.  
 ```{r}
 # write 2 tables to database: overwrite existing "present" table, and stash a snapshot of the current table
-dbWriteTable(cdb, "present2", complete, overwrite = TRUE) # overwrite existing table
+dbWriteTable(cdb, "present", complete, overwrite = TRUE) # overwrite existing table
 ```
 
 
@@ -461,7 +461,9 @@ most_recent_email_subject <-
 
 ```{r}
 # extract most recent emails
-most_recent_emails <- d[d$subject %in% most_recent_email_subject, ]
+most_recent_emails <- d[d$subject %in% most_recent_email_subject, ] %>% 
+  group_by(subject) %>% 
+  top_n(1, wt = date)
 
 battery_lines <- lapply(most_recent_emails$body, function(x){unlist(strsplit(x, "\r\n"))} )
 
@@ -502,15 +504,21 @@ get_bat_life <- function(v){
 # v = lines[[7]] # MW5
 # v
 
+# extract and compile battery life data frame
+battery_life_df <- lapply(battery_lines, get_bat_life) %>% 
+  bind_rows() %>% 
+  arrange(bat)
 
-get_bat_life(battery_lines)
-
-
-  
+# write to the cloud db
+dbWriteTable(cdb, "battery_life_df", battery_life_df, overwrite = TRUE)
 ```
 
 
-If the battery life for any LS or LL is below 
+If the battery life for any LS or LL is equal to or below 75, send an email until it is not.
+```{r}
+
+```
+
 
 
 
