@@ -370,10 +370,28 @@ November 1-2, 2018
 
 ***  
 
+November 5, 2018  
 
-* set trigger to send emails when levelsender batteries <= 75%  
+* `02_daily_report.Rmd`: automated daily report that prints battery life table, map of battery life table, and last 30 days of hydrograph into a PDF and emails it.  
 
 
+***  
+
+November 6, 2018  
+
+* finalized daily report script  
+* created new gmail account cosumnes_gw_observatory@gmail.com, and a Gmail API client to send emails  
+
+
+
+***  
+
+November 7, 2018  
+
+* convert `01_query_sqlite...Rmd` into a .R file  
+* write `03_run.R` that sources the newly created R file  
+* write batch file to run every 24 hours  
+* integrate datastream with online app  
 
 ***  
 

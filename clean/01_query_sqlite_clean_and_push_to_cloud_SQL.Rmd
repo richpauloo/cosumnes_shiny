@@ -538,9 +538,6 @@ ggp <- ggplot(rows_to_append, aes(dt, level, color = factor(id))) +
   theme_minimal()
 
 write_rds(ggp, "ggp.rds")
-
-
-
 ```
 
 Source the Rmd file that writes the daily report, and wait a minute.
@@ -559,15 +556,13 @@ today <- Sys.Date() # get today's date
 
 # compose and send email
 mime() %>% 
-  from("richpauloo@gmail.com") %>% 
+  from("cosumnes.gw.observatory@gmail.com") %>% 
   to("rpauloo@ucdavis.edu") %>% 
   subject(paste("Groundwater Observatory Report:", today)) %>% 
-  text_body("") %>% 
+  text_body("See the attached PDF.") %>% 
   attach_file("02_daily_report.pdf") %>% 
   send_message()
 ```
-
-
 
 
 
