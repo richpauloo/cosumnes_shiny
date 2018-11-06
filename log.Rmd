@@ -359,20 +359,35 @@ Battery outages in the LevelSender throw impossible values at the temp and level
 5. Repeat for every new battery outage.  
 
 
+***  
+
+November 1-2, 2018  
+
+* moved baro adjusted water level and cable length calculation to the `elev.csv`  
+* code to extract battery life  
+* convert all .csv to .txt for unambiguous date formats  
 
 
+***  
+
+
+* set trigger to send emails when levelsender batteries <= 75%  
+
+
+
+***  
+
+Additional Feautures Wishlist (in no order)  
 
 * battery changes in level senders also require a hotfix. This can probably be scripted in and controlled by an external CSV.  
-`clean/dependencies/ll_battery_outages.csv`
+`clean/dependencies/ll_battery_outages.csv`  
 
 
 
 
 
 
-* To do: write a function that grabs battery level from the level senders and loggers and puts in a table. This table will be used by the shiny app.  
-    + set trigger to send emails when levelsender batteries <= 70%  
-    + 
+
 
 
 

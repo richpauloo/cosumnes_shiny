@@ -511,15 +511,61 @@ battery_life_df <- lapply(battery_lines, get_bat_life) %>%
 
 # write to the cloud db
 dbWriteTable(cdb, "battery_life_df", battery_life_df, overwrite = TRUE)
+
+# write to temp directory
+write_rds(battery_life_df, "battery_life_df.rds")
 ```
 
 
 If the battery life for any LS or LL is equal to or below 75, send an email until it is not.
 ```{r}
+# format battery update
+library(stargazer)
+battery_html_table <- 
+  stargazer(battery_life_df, type = "html", 
+            title = "Battery Life of LS & LL Units", 
+            summary = FALSE) %>% 
+  paste(., collapse = "")
+
+# write plot attachment
+library(ggplot2)
+ggp <- ggplot(rows_to_append, aes(dt, level, color = factor(id))) + 
+  geom_line() +
+  labs(title    = paste("Adjusted Groundwater Levels, last updated:", today),
+       subtitle = "Showing last 30 days",
+       x = "Time", y = "Groundwater Level (m)",
+       color = "LS ID #") +
+  theme_minimal()
+
+write_rds(ggp, "ggp.rds")
+
+
 
 ```
 
+Source the Rmd file that writes the daily report, and wait a minute.
+```{r}
+source("02_daily_report.Rmd")
+Sys.sleep(time = 60)
+```
 
+Send the daily report.
+```{r}
+suppressPackageStartupMessages(library(gmailr))
+
+use_secret_file("gmail_oauth_gwobs_secret.json")
+
+today <- Sys.Date() # get today's date
+
+# compose and send email
+mime() %>% 
+  from("richpauloo@gmail.com") %>% 
+  to("rpauloo@ucdavis.edu") %>% 
+  subject(paste("Groundwater Observatory Report:", today)) %>% 
+  text_body("") %>% 
+  attach_file("02_daily_report.pdf") %>% 
+  send_message()
+```
 
 
 
