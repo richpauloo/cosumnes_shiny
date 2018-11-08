@@ -9,10 +9,8 @@ library(plotly)
 library(DBI)
 
 # well location is built into the code, meaning every time a well is added, the code will need to be updated.
-cs_coords <- data.frame(lat = c(38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101), 
-                        lng = c(-121.379, -121.381, -121.369, -121.374, -121.379, -121.379, -121.382, -121.391, -121.391, -121.376, -121.384, -121.382, -121.384), 
-                        Location = c("MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13")
-                        )
+cs_coords <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt")
+cs_coords <- cs_coords[ , c("mw_name","ls_id", "lat", "lng")] 
 
 # battery life will come in as a df from MySQL
 battery_df = data.frame(Location = c("MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13"), 
@@ -59,7 +57,7 @@ well_dat_daily <- well_dat_daily %>% as.data.frame()
 ##############################################################################
 
 # caption below hydrograph on first tab
-caption <- 'These monitoring wells reflect the water table elevation in the South American River subbasin. For more information on research by UC Water, please visit'
+caption <- 'These monitoring wells reflect the unconfined groundwater level in the South American River subbasin, and may not be exact. For more information on research by UC Water, please visit'
 
 
 # read password for SQL database with groundwater level
