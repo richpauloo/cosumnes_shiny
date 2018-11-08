@@ -300,8 +300,8 @@ mw_data   <- rename(mw_data, level_mw = level, ls_id = id) %>%
 
 # join baro and mw databy datetime, calculate adjusted water level
 adj_data <- left_join(mw_data, baro_data, by = "dt") %>% 
-  mutate(level_baro = zoo::na.approx(level_baro), # linear interpolation of missing values
-        adj_level = level_mw - level_baro)        # adjusted level
+  mutate(level_baro = zoo::na.approx(level_baro, na.rm = FALSE), # linear interpolation of missing values
+         adj_level = level_mw - level_baro)                      # adjusted level
 
 #adj_data %>% ggplot(aes(dt, adj_level, color = factor(ls_id))) + geom_line()
 ```
@@ -544,18 +544,25 @@ Send the daily report.
 ```{r}
 suppressPackageStartupMessages(library(gmailr))
 
+# OAtuh token
 use_secret_file("gmail_oauth_gwobs_secret.json")
 
-today <- Sys.Date() # get today's date
+# email list
+emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
+  pull(email)
 
 # compose and send email
-mime() %>% 
-  from("cosumnes.gw.observatory@gmail.com") %>% 
-  to("rpauloo@ucdavis.edu") %>% 
-  subject(paste("Groundwater Observatory Report:", today)) %>% 
-  text_body("") %>% 
-  attach_file("02_daily_report.pdf") %>% 
-  send_message()
+for(i in 1:length(emails)){
+  mime() %>% 
+    from("cosumnes.gw.observatory@gmail.com") %>% 
+    to(emails[i]) %>% 
+    subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
+    text_body("") %>% 
+    attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
+    send_message()
+  
+    Sys.sleep(5)
+}
 ```
 
 

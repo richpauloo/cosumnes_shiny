@@ -242,8 +242,8 @@ mw_data   <- rename(mw_data, level_mw = level, ls_id = id) %>%
 
 # join baro and mw databy datetime, calculate adjusted water level
 adj_data <- left_join(mw_data, baro_data, by = "dt") %>% 
-  mutate(level_baro = zoo::na.approx(level_baro),        # linear interpolation of missing values
-         adj_level = level_mw - level_baro)              # adjusted level
+  mutate(level_baro = zoo::na.approx(level_baro, na.rm = FALSE), # linear interpolation
+         adj_level = level_mw - level_baro) # adjusted level            
 
 
 # Adjust by elevation.
@@ -432,6 +432,10 @@ write_rds(ggp, "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/ggp.rds")
 # Source the Rmd file that writes the daily report.
 ####################################################################################
 
+# tell R where to find Pandoc
+Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/bin/pandoc")
+
+# render the report
 rmarkdown::render(input = "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.Rmd", 
                   output_file = "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf", 
                   output_format = "pdf_document")
@@ -444,16 +448,28 @@ Sys.sleep(30)
 
 suppressPackageStartupMessages(library(gmailr))
 
+# OAuth token
 use_secret_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oauth_gwobs_secret.json")
 
+# email list
+emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
+  pull(email)
+
+emails <- c(emails[1], "richpauloo@gmail.com")
+
 # compose and send email
-mime() %>% 
-  from("cosumnes.gw.observatory@gmail.com") %>% 
-  to("rpauloo@ucdavis.edu") %>% 
-  subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
-  text_body("") %>% 
-  attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
-  send_message()
+for(i in 1:length(emails)){
+  mime() %>% 
+    from("cosumnes.gw.observatory@gmail.com") %>% 
+    to(emails[i]) %>% 
+    subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
+    text_body("") %>% 
+    attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
+    send_message()
+  
+    Sys.sleep(5)
+}
+
 
 
 
