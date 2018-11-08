@@ -388,12 +388,27 @@ November 6, 2018
 
 November 7, 2018  
 
-* convert `01_query_sqlite...Rmd` into a .R file  
-* write `03_run.R` that sources the newly created R file  
-* write batch file to run every 24 hours  
-* integrate datastream with online app  
+* converted `01_query_sqlite...Rmd` into a .R file  
+* wrote `03_run.R` that sources the newly created R file  
+* fixed some latex bugs in the automated report by following error messages. Basically need to use a few latex packages.  
+   - `\usepackage[table]{xcolor}`  
+   - `\usepackage{tabu}`  
+   - `\usepackage{makecell,interfaces-makecell}`  
+
 
 ***  
+
+November 8, 2018  
+
+* add coordinates for wells from Andrew's Slack message  
+* integrate datastream with online app  
+* write list of emails to send report to  
+* write batch file to run `03_run.R` every 24 hours  
+
+
+
+***  
+
 
 Additional Feautures Wishlist (in no order)  
 

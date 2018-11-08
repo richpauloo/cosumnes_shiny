@@ -1,33 +1,17 @@
----
-title: "Query SQLite, clean, and push to cloud SQL"
-output: html_document
----
-
-The purpose of this script is to:  
-
-* obtain data from the Home Station Database for Level Sender, in `C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite`  
-* clean that data (adjusting for barometric pressure)  
-* push clean data to cloud SQL database  
-
-
-*** 
-
-
-# Clean SQLite Emails
-
-
-First, load the relevant libraries.
-```{r}
+####################################################################################
+# Load the relevant libraries
+####################################################################################
 library(RSQLite)
 library(DBI)
 library(tidyverse)
 library(stringr)
 library(lubridate)
-```
 
 
-Refresh emails and append to sqlite database.
-```{r}
+
+####################################################################################
+# Refresh emails and append to sqlite database.  
+####################################################################################
 # simulates clicking the "Retrieve Emails Button"
 system(
   shQuote(
@@ -35,12 +19,12 @@ system(
     type = "cmd" # change to "sh" for Unix/bash, and "csh" for C-shell
   )
 )
-```
 
 
-Connect to .sqlite database, and list the tables of data in it.
-```{r}
-# connect to SQLite database that Solinist regularly updates
+
+####################################################################################
+# Connect to .sqlite database, get the emails, and format dates.
+####################################################################################
 db <- dbConnect(SQLite(), dbname = "C:/Users/rpauloo/Documents/LevelSender/db/levelsender.sqlite")
 
 # read emails, select interesting data, filter for relevant emails with data, and rename columns
@@ -49,13 +33,15 @@ d <- dbReadTable(db, "ReceivedEmail") %>%
   filter( grepl("LS Report", Subject) ) %>% 
   rename(date = ReceivedDate, subject = Subject, body = Body)
 
-# We want to arrange these emails by the date they were received, but first we need to convert the `Date` from a character vector to a `Date` object.
+# We want to arrange these emails by the date they were received, 
+# but first we need to convert the `Date` from a character vector to a `Date` object.
 d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
-```
 
 
-Filter for all emails within a 120 day window of the current date.
-```{r}
+
+####################################################################################
+#Filter for all emails within a 120 day window of the current date.
+####################################################################################
 # 30 day rolling window
 current <- Sys.Date() - 30
 
@@ -64,11 +50,13 @@ d$date_2 <- as_date(d$date)
 
 # filter for all emails from `current` onwards
 check <- filter(d, date_2 >= current)
-```
 
 
-Identify records containing MW5.
-```{r}
+
+####################################################################################
+# Identify records containing MW5 & write a function to extract all timeseries data
+####################################################################################
+
 # serial number for mw5 level sender
 mw5 <- ": 283687"
 
@@ -89,18 +77,18 @@ get_data <- function(v){
     id <- v[str_detect(v, "Serial: ")][1]    # 1st serial is level sender id
     baro <- v[str_detect(v, "Serial: ")][3]  # 3rd serial is baro  logger id
   }
-
+  
   # if the well != mw5
   if (ss == 0) {
     id <- v[str_detect(v, "Serial: ")][1]    # 1st serial number is level sender id
   }
-
+  
   # subset for the level logger serial number by string position "Serial: #######"
   id <- as.numeric(substr(id, 9, nchar(id)))
   
   # if barometric pressure logger is present, get its serial
   if(!is.null(baro)){baro <- as.numeric(substr(baro, 9, nchar(baro)))}
-
+  
   
   # if the well == MW 5
   if (ss == 1) {
@@ -134,7 +122,7 @@ get_data <- function(v){
     #df$id <- factor(df$id)
     
   }
-
+  
   # if the well != mw5
   if (ss == 0) {
     
@@ -164,17 +152,12 @@ get_data <- function(v){
   return(df)
 }
 
-# diagnostics
-# v = lines[[1]] # non-MW5
-# v = lines[[6]]  # MW5
-# v = lines[[195]] # MW5 non-equal ... need to save extra baro without filtering it out
-# another one is broken between 180 and 195... find it!
-# get_data(v)
-```
 
 
-Apply function to all `lines` from `current` data.
-```{r}
+####################################################################################
+# Apply function to all `lines` from `current` data.
+####################################################################################
+
 # apply function to list of current emails
 dfs <- lapply(lines, get_data) # temp until non-equal issue is fixed
 
@@ -186,42 +169,22 @@ all <- filter(all, level < 1000)
 
 # save immediately checked email for battery df later
 use_for_bat <- all
-```
 
 
-Temporary--delete after Andrew replaces LS batteries. Then go into the database and fix these values... or somehow only append data that's new, while keeping the old "golden" data in the Cloud SQL db.
-```{r}
-#all <- filter(all, dt < ymd_hms("2018-10-18 00:00:00 UTC"))
-```
 
-Outage Hot Fixes. This will unfortunately be a messy part of the data cleaning pipeline.    
+####################################################################################
+# Outage Hot Fixes
+####################################################################################
 
-Battery outages in the LevelSender throw impossible values at the temp and level, e.g. - level = 0.00. Never let battery outages in the LS happen again because this hot fix actually takes some time. It requires downloading the Level Logger data, and manually inserting it into the database. When this does unfortunately happen you should:  
-
-IN THE FIELD:  
-
-1. Immediately change the batteries in the dead LS. Reported values will be noticably low and impossible (e.g. - level = -0.1 or 0.0).  
-
-***  
-
-IN THIS CLEANING SCRIPT (only after the field is done):  
-
-2. Identify the start and end times of the outage, and omit from the data in this script.  
-3. Separately, extract this same data range from the levelloggers, and upload into the script to replace the now extracted data with impossible values caused by the outage.  
-4. Repeat for every new battery outage.  
-
-```{r}
 # October 2018 MW5 OUTAGE with affected the baro and water level loggers
 out_window <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_battery_outages.txt")
 
 # omit the data from these outage wells within the outage window 
 for(i in 1:nrow(out_window)){
   all <- filter(all, !(id == out_window$ls_id[i] & 
-                       dt >= out_window$out_start[i] & 
-                       dt <= out_window$out_end[i]))
+                         dt >= out_window$out_start[i] & 
+                         dt <= out_window$out_end[i]))
 }
-
-all %>% arrange(level) # it works!
 
 # read in recovered data and append to all
 recovered_data <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/ls_recovered_data.txt")
@@ -232,13 +195,12 @@ recovered_data <- rename(recovered_data, id = ls_id) %>% select(dt, temp, level,
 # merge
 all <- bind_rows(all, recovered_data)
 
-all %>% ggplot(aes(dt, level, color = factor(id))) + geom_line()
-```
 
 
+####################################################################################
+# Separate barologger and monitoring well data. 
+####################################################################################
 
-Separate barologger and monitoring well data. 
-```{r}
 # serial number for baro logger
 baro_serial <- "2038232"
 
@@ -248,102 +210,51 @@ baro_data <- filter(all, id == baro_serial)
 # monitoring well timeseries
 mw_data <- filter(all, id != baro_serial) 
 
-# monitoring well timeseries with corresponding barometric data
-#mw_data <- filter(mw_data, dt %in% baro_data$dt)
-```
 
 
-Visualize me and baro timeseries. Can delete once app is running.
-```{r}
-# visualize
-mw_data %>% ggplot(aes(dt, level, color = factor(id))) + geom_line()
-
-baro_data %>%
-  #filter(level > 0) %>%
-  ggplot(aes(dt, level, color = factor(id))) + geom_line()
-```
-
-
-***  
-
-
+####################################################################################
 # Tranformations
+####################################################################################
 
-
-Remove temperature from barometric and monitoring well data.
-```{r}
+# Remove temperature from barometric and monitoring well data.
 baro_data <- select(baro_data, -temp)
 mw_data   <- select(mw_data,   -temp)
-```
 
 
-Convert barometric data from PSI to meters.
-```{r}
-# PSI to meters conversion factor
+#Convert barometric data from PSI to meters.
 psi_to_m <- function(psi){
-  return(psi * 0.703070)
+  return(psi * 0.703070)    # PSI to meters conversion factor
 }
 
 # convert barometric timeseries from PSI to meters 
 baro_data$level <- psi_to_m(baro_data$level)
-```
 
 
-Adjust monitoring well levels by barometric data.
-```{r}
+# Adjust monitoring well levels by barometric data.
+
 # rename columns in baro and mw data to remove ambiguity, drop id in baro data, round to nearest hour
-baro_data <- rename(baro_data, level_baro = level) %>% select(-id) %>% 
-  mutate(dt = round_date(dt, unit = "hour"))      # round to nearest hour
-         
+baro_data <- rename(baro_data, level_baro = level) %>% 
+  select(-id) %>% 
+  mutate(dt = round_date(dt, unit = "hour"))             # round to nearest hour
+
 mw_data   <- rename(mw_data, level_mw = level, ls_id = id) %>% 
-  mutate(dt = round_date(dt, unit = "hour")) # round to nearest hour
+  mutate(dt = round_date(dt, unit = "hour"))             # round to nearest hour
 
 # join baro and mw databy datetime, calculate adjusted water level
 adj_data <- left_join(mw_data, baro_data, by = "dt") %>% 
-  mutate(level_baro = zoo::na.approx(level_baro), # linear interpolation of missing values
-        adj_level = level_mw - level_baro)        # adjusted level
-
-#adj_data %>% ggplot(aes(dt, adj_level, color = factor(ls_id))) + geom_line()
-```
+  mutate(level_baro = zoo::na.approx(level_baro),        # linear interpolation of missing values
+         adj_level = level_mw - level_baro)              # adjusted level
 
 
-Adjust by elevation.
-```{r}
+# Adjust by elevation.
+
 # read in elevation data from github
 #elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
 elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt")
 
-# find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
-
-# ls_ids <- unique(mw_data$ls_id) # vector of LS ids
-  
-# calc_cable_length <- function(x){
-#   i     <- which(elev$ls_id == x)           # row index of level sender
-#   dolm  <- mdy_hm(elev$date_of_last_dtw_measurement[i])  # date of last measurement for LS
-#   dolml <- filter(adj_data, ls_id == x & dt <= dolm)[1, "adj_level"] # level at dolm
-#   
-#   if(is.na(dolml)){
-#     dolml <- filter(adj_data, ls_id == x & dt >= dolm)[1, "adj_level"] # level at dolm
-#   }
-#   
-#   return(dolml)
-# }
-
-# combine ls ids and water levels at measurement date
-# key <- data.frame(ls_id = ls_ids,
-#                   wls   = sapply(ls_ids, calc_cable_length))
-
-
-# calculate effective cable length from measured depth to water (every 3 months) 
-# and actual water level above transducer at the date when water was measured ^^
-# (still needs to be adjusted by 9.5m)
-# temp <- left_join(elev, key, by = "ls_id") %>% 
-#   mutate(cable_length = dtw_m + wls)
-
 
 # update adjusted data
 adj_data <- left_join(adj_data, elev, by = "ls_id") 
-
 adj_data <- mutate(adj_data, adj_level = ifelse(ll_subtracts_95_m == TRUE, 
                                                 9.5 + adj_level, 
                                                 adj_level))
@@ -354,22 +265,15 @@ adj_data <- mutate(adj_data, final_level = adj_level + elev_m - cable_length)
 
 # grab subset of data to append to cloud db
 rows_to_append <- select(adj_data, dt, ls_id, final_level) %>% rename(id = ls_id, level = final_level)
-```
 
 
-Visualize final level. Remove later.
-```{r}
-adj_data %>% ggplot(aes(dt, final_level, color = factor(ls_id))) + geom_line()
-baro_data  %>% ggplot(aes(dt, level_baro)) + geom_line()
-```
 
-
-***
-
+####################################################################################
 # Write Transformed Data to Cloud DB
+####################################################################################
 
-Connect to cloud database.
-```{r}
+# Connect to cloud database
+
 # password for gw obs db
 pw <- read_rds("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/dashboard/data/pw.rds")
 
@@ -380,29 +284,22 @@ cdb <- dbConnect(RMySQL::MySQL(),
                  host = "169.237.35.237",
                  dbname = "gw_observatory",
                  port = 33306)
-```
 
 
-Read the present data, define object classes, append new data, and filter for the unique rows.
-```{r}
+
+####################################################################################
+# Read the present data, define object classes, append new data, and filter for the unique rows.
+
 # most current data
 present <- dbReadTable(cdb, "present")
 
 # fix class of dates and levels in present data
 present$dt <- ymd_hms(present$dt)
 
-# merege well name and LS id
-# ls_id_key <- data.frame(well = c("SWL.11","SWL.19","SWL.22","SWL.5","SWL.9","SWL.DR1","SWL.Rooney1","SWL.UCD26"),
-#                         id   = c(284216, 284214, 284217, 283687, 284220, 284227, 284215, 284197))
-
 present <- present %>% 
   gather(id, level, -dt) %>% 
   mutate(level = as.numeric(level)) %>% 
-  #left_join(ls_id_key, by = "well") %>% 
   select(dt, id, level) 
-
-#present <- spread(present, id, level)
-
 
 # change ids so the join can occur
 rows_to_append$id <- paste0("X", rows_to_append$id)     
@@ -413,18 +310,19 @@ complete <- bind_rows(present, rows_to_append) %>%
 
 # cast back into wide format for shiny app and smaller data.frame
 complete <- spread(complete, key = "id", value = "level")
-```
 
 
-Overwrite the `present` data in the cloud database.  
-```{r}
-# write 2 tables to database: overwrite existing "present" table, and stash a snapshot of the current table
+####################################################################################
+# Overwrite the `present` data in the cloud database.  
+####################################################################################
+
+# write 2 tables to database: present and every 7 days, save a copy
+
+# overwrite existing "present" table
 dbWriteTable(cdb, "present", complete, overwrite = TRUE) # overwrite existing table
-```
 
+# Save a version of the database every 7 days.
 
-Save a version of the database every 7 days.
-```{r}
 # days of year to save copy of the data
 save_days <- seq(8,365, 7)
 
@@ -440,11 +338,14 @@ if(doy %in% save_days == TRUE){
   # write the table
   dbWriteTable(cdb, todays_date, complete)
 }
-```
 
 
-Find most recent email, get the battery life of LS, LL and baro (if MW5), and save to a table in cloud db.
-```{r}
+
+####################################################################################
+# Find most recent email, get the battery life of LS, LL and baro (if MW5), 
+# and save to a table in cloud db
+####################################################################################
+
 # find most recent email subject lines
 most_recent_email_subject <- 
   separate(d, subject, into = c("id", "ls", "report", "report_num")) %>% 
@@ -456,10 +357,7 @@ most_recent_email_subject <-
   filter(id %in% unique(mw_data$ls_id)) %>% 
   mutate(find = paste(id, "LS Report", report_num)) %>% 
   pull(find)
-```
 
-
-```{r}
 # extract most recent emails
 most_recent_emails <- d[d$subject %in% most_recent_email_subject, ] %>% 
   group_by(subject) %>% 
@@ -469,7 +367,7 @@ battery_lines <- lapply(most_recent_emails$body, function(x){unlist(strsplit(x, 
 
 # function to apply
 get_bat_life <- function(v){ 
-
+  
   # does mw5 appear in the email? 
   ss <- sum(str_detect(v, mw5)) 
   
@@ -477,32 +375,26 @@ get_bat_life <- function(v){
   id       <- v[str_detect(v, "Serial: ")][1]      # 1st serial is level sender id
   id       <- as.numeric(substr(id, 9, nchar(id))) # numeric
   battery  <- v[str_detect(v, "Battery: ")]        # battery life for LS and 2 LLs
-    
+  
   # get battery of LS, LL, and barologger
   battery_vals <- substr(battery, 9, nchar(battery)-1) %>% as.numeric()
-    
+  
   # make into df
   bat_df <- data.frame(id   = paste0("X", id),
-                         bat  = battery_vals)
-                       
+                       bat  = battery_vals)
+  
   # if the well == MW 5
   if (ss == 1) {
     bat_df$unit <- c("Sender", "Logger","Baro")
   }
-
+  
   # if the well != mw5
   if (ss == 0) {
     bat_df$unit <- c("Sender", "Logger")
   }
-
   
   return(bat_df)
 }
-
-# diagnostics
-# v = lines[[1]] # non-MW5
-# v = lines[[7]] # MW5
-# v
 
 # extract and compile battery life data frame
 battery_life_df <- lapply(battery_lines, get_bat_life) %>% 
@@ -513,57 +405,60 @@ battery_life_df <- lapply(battery_lines, get_bat_life) %>%
 dbWriteTable(cdb, "battery_life_df", battery_life_df, overwrite = TRUE)
 
 # write to temp directory
-write_rds(battery_life_df, "battery_life_df.rds")
-```
+write_rds(battery_life_df, "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/battery_life_df.rds")
 
 
-If the battery life for any LS or LL is equal to or below 75, send an email until it is not.
-```{r}
+
+####################################################################################
+# Save a plot of the last 30 days of data to send in the automated report
+####################################################################################
+
 # write plot attachment
 library(ggplot2)
 ggp <- ggplot(rows_to_append, aes(dt, level, color = factor(id))) + 
   geom_line() +
-  labs(title    = paste("Adjusted Groundwater Levels, last updated:", today),
+  labs(title    = paste("Adjusted Groundwater Levels, last updated:", Sys.Date()),
        subtitle = "Showing last 30 days",
        x = "Time", y = "Groundwater Level (m)",
        color = "LS ID #") +
   theme_minimal()
 
-write_rds(ggp, "ggp.rds")
-```
+write_rds(ggp, "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/ggp.rds")
 
-Source the Rmd file that writes the daily report.
-```{r}
+
+
+####################################################################################
+# Source the Rmd file that writes the daily report.
+####################################################################################
+
 rmarkdown::render(input = "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.Rmd", 
                   output_file = "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf", 
                   output_format = "pdf_document")
-```
 
-Send the daily report.
-```{r}
+Sys.sleep(30)
+
+####################################################################################
+# Send the daily report via GMAIL API
+####################################################################################
+
 suppressPackageStartupMessages(library(gmailr))
 
-use_secret_file("gmail_oauth_gwobs_secret.json")
-
-today <- Sys.Date() # get today's date
+use_secret_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oauth_gwobs_secret.json")
 
 # compose and send email
 mime() %>% 
   from("cosumnes.gw.observatory@gmail.com") %>% 
   to("rpauloo@ucdavis.edu") %>% 
-  subject(paste("Groundwater Observatory Report:", today)) %>% 
+  subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
   text_body("") %>% 
-  attach_file("02_daily_report.pdf") %>% 
+  attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
   send_message()
-```
 
 
 
-Disconnect from SQLite and cloud SQL databases.
-```{r}
-# disconnect from SQlite and cloud SQL dbs
+####################################################################################
+# Disconnect from SQLite and cloud SQL databases.
+####################################################################################
+
 dbDisconnect(db)  # SQLite
 dbDisconnect(cdb) # cloud SQL
-```
-
-

@@ -1,5 +1,9 @@
 ---
 title: "`r paste('Groundwater Observatory Daily Report:', Sys.Date())`"
+header-includes:
+   - \usepackage[table]{xcolor}
+   - \usepackage{tabu}
+   - \usepackage{makecell,interfaces-makecell}
 output: pdf_document
 ---
 
