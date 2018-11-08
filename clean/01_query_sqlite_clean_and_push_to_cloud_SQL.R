@@ -221,7 +221,7 @@ baro_data <- select(baro_data, -temp)
 mw_data   <- select(mw_data,   -temp)
 
 
-#Convert barometric data from PSI to meters.
+# Convert barometric data from PSI to meters.
 psi_to_m <- function(psi){
   return(psi * 0.703070)    # PSI to meters conversion factor
 }
