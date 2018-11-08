@@ -250,7 +250,8 @@ adj_data <- left_join(mw_data, baro_data, by = "dt") %>%
 
 # read in elevation data from github
 #elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
-elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt")
+elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt") %>% 
+  filter(!is.na(ls_id))
 
 
 # update adjusted data

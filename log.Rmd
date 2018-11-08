@@ -400,10 +400,12 @@ November 7, 2018
 
 November 8, 2018  
 
-* add coordinates for wells from Andrew's Slack message  
-* integrate datastream with online app  
+* added coordinates for wells from Andrew's Slack message  
 * write list of emails to send report to  
 * write batch file to run `03_run.R` every 24 hours  
+* integrate datastream with online app  
+
+
 
 
 

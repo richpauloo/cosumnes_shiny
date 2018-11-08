@@ -311,7 +311,8 @@ Adjust by elevation.
 ```{r}
 # read in elevation data from github
 #elev <- read_csv("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/dependencies/elev.csv")
-elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt")
+elev <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/elev.txt") %>% 
+  filter(!is.na(ls_id))
 
 # find baro-adjusted water level for matching date time in manually measured `date_of_last_dtw_measurement`
 
