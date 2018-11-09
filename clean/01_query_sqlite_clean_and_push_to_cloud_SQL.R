@@ -455,8 +455,6 @@ use_secret_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oa
 emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
   pull(email)
 
-emails <- c(emails[1], "richpauloo@gmail.com")
-
 # compose and send email
 for(i in 1:length(emails)){
   mime() %>% 
