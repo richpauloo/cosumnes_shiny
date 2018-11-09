@@ -13,10 +13,10 @@ cs_coords <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shi
 cs_coords <- cs_coords[ , c("mw_name","ls_id", "lat", "lng")] 
 
 # battery life will come in as a df from MySQL
-battery_df = data.frame(Location = c("MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13"), 
+battery_df = data.frame(mw_name = c("MW_2", "MW_9", "MW_11", "MW_20", "OnetoAg", "MW_19", "MW_23", "MW_22", "MW_7", "MW_5", "MW_3", "MW_17", "MW_13"), 
                         battery = 88:100)
 # add battery info to well_cords
-left_join(cs_coords, battery_df, by = "Location") -> cs_coords
+left_join(cs_coords, battery_df, by = "mw_name") -> cs_coords
 
 
 # add custom labels. http://rpubs.com/bhaskarvk/electoral-Map-2016.
@@ -40,7 +40,7 @@ cs_coords$hover_text <- mapply(
       )
     )
   },
-  cs_coords$Location,
+  cs_coords$mw_name,
   cs_coords$lat,
   cs_coords$lng,
   cs_coords$battery, SIMPLIFY = F) 
