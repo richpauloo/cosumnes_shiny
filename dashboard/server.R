@@ -11,7 +11,7 @@ observeEvent(input$location, {
 
 # leaflet output of wells
 output$Map <- renderLeaflet({
-	leaflet() %>% addProviderTiles(providers$Esri.WorldImagery) %>% setView(lng=-121.378, lat=38.30139, zoom=13) %>%
+	leaflet() %>% addProviderTiles(providers$Esri.WorldImagery) %>% #setView(lng=-121.378, lat=38.30139, zoom=13) %>%
 		addCircleMarkers(data=cs_coords, 
 		                 stroke=FALSE, 
 		                 fillOpacity=.6, 
@@ -146,70 +146,70 @@ output$network <- renderPlotly({
   #smooth$x <- as.Date(as.POSIXct(smooth$x, origin="1970-01-01"))
   smooth$x <- anytime(smooth$x)
   
-  # temp2 <- gather(temp, wells, level, -Date)
-  # ggp <- ggplot(temp2, aes(Date, level)) +
-  #   geom_line(aes(color = wells)) +
-  #   geom_smooth(color = "red") +
-  #   scale_color_grey() +
-  #   labs(y = "Level") +
-  #   theme(legend.position='none')
-  # ggplotly(ggp) 
+  temp2 <- gather(temp, wells, level, -Date)
+  ggp <- ggplot(temp2, aes(Date, level)) +
+    geom_line(aes(color = wells)) +
+    geom_smooth(color = "red") +
+    scale_color_grey() +
+    labs(y = "Level") +
+    theme(legend.position='none')
+  ggplotly(ggp)
     
   
 #   # plot 
-  plot_ly(temp, x = ~Date) %>%
-    add_lines(y = ~MW2, name = "MW2", color= I("gray5")) %>%
-    add_lines(y = ~MW9, name = "MW9", color= I("gray10")) %>%
-    add_lines(y = ~MW11, name = "MW11", color= I("gray15")) %>%
-    add_lines(y = ~MW20, name = "MW20", color= I("gray20")) %>%
-    add_lines(y = ~OnetoAg, name = "OnetoAg", color= I("gray25")) %>%
-    add_lines(y = ~MW19, name = "MM19", color= I("gray30")) %>%
-    add_lines(y = ~MW23, name = "MW23", color= I("gray35")) %>%
-    add_lines(y = ~MW22, name = "MW22", color= I("gray40")) %>%
-    add_lines(y = ~MW7, name = "MW7", color= I("gray45")) %>%
-    add_lines(y = ~MW5, name = "MW5", color= I("gray50")) %>%
-    add_lines(y = ~MW3, name = "MW3", color= I("gray55")) %>%
-    add_lines(y = ~MW17, name = "MW17", color= I("gray60")) %>%
-    add_lines(y = ~MW13, name = "MW13", color= I("gray65")) %>%
-    add_ribbons(data = smooth, x=~x, ymin=~ymin, ymax=~ymax, color = I("gray80"), name = "Confidence Interval") %>%
-    add_lines(data = smooth, x=~x, y=~y, color = I("red"), name = "AVERAGE") %>%
-    layout(
-      showlegend = FALSE,
-      title = FALSE, #"Entire Monitoring Well Network",
-      xaxis = list(
-        rangeselector = list(
-          buttons = list(
-            list(
-              count = 3,
-              label = "3 mo",
-              step = "month",
-              stepmode = "backward"),
-            list(
-              count = 6,
-              label = "6 mo",
-              step = "month",
-              stepmode = "backward"),
-            list(
-              count = 1,
-              label = "1 yr",
-              step = "year",
-              stepmode = "backward"),
-            list(
-              count = 1,
-              label = "YTD",
-              step = "year",
-              stepmode = "todate"),
-            list(step = "all"))),
-
-        rangeslider = list(type = "date"),
-        range = c( input$date_range[1], input$date_range[2])
-      ),
-
-      yaxis = list(title = paste0("Level (", input$units_2, ")"))
-
-    ) %>%
-
-    config(displayModeBar = FALSE)
+  # plot_ly(temp, x = ~Date) %>%
+  #   add_lines(y = ~MW2, name = "MW2", color= I("gray5")) %>%
+  #   add_lines(y = ~MW9, name = "MW9", color= I("gray10")) %>%
+  #   add_lines(y = ~MW11, name = "MW11", color= I("gray15")) %>%
+  #   add_lines(y = ~MW20, name = "MW20", color= I("gray20")) %>%
+  #   add_lines(y = ~OnetoAg, name = "OnetoAg", color= I("gray25")) %>%
+  #   add_lines(y = ~MW19, name = "MM19", color= I("gray30")) %>%
+  #   add_lines(y = ~MW23, name = "MW23", color= I("gray35")) %>%
+  #   add_lines(y = ~MW22, name = "MW22", color= I("gray40")) %>%
+  #   add_lines(y = ~MW7, name = "MW7", color= I("gray45")) %>%
+  #   add_lines(y = ~MW5, name = "MW5", color= I("gray50")) %>%
+  #   add_lines(y = ~MW3, name = "MW3", color= I("gray55")) %>%
+  #   add_lines(y = ~MW17, name = "MW17", color= I("gray60")) %>%
+  #   add_lines(y = ~MW13, name = "MW13", color= I("gray65")) %>%
+  #   add_ribbons(data = smooth, x=~x, ymin=~ymin, ymax=~ymax, color = I("gray80"), name = "Confidence Interval") %>%
+  #   add_lines(data = smooth, x=~x, y=~y, color = I("red"), name = "AVERAGE") %>%
+  #   layout(
+  #     showlegend = FALSE,
+  #     title = FALSE, #"Entire Monitoring Well Network",
+  #     xaxis = list(
+  #       rangeselector = list(
+  #         buttons = list(
+  #           list(
+  #             count = 3,
+  #             label = "3 mo",
+  #             step = "month",
+  #             stepmode = "backward"),
+  #           list(
+  #             count = 6,
+  #             label = "6 mo",
+  #             step = "month",
+  #             stepmode = "backward"),
+  #           list(
+  #             count = 1,
+  #             label = "1 yr",
+  #             step = "year",
+  #             stepmode = "backward"),
+  #           list(
+  #             count = 1,
+  #             label = "YTD",
+  #             step = "year",
+  #             stepmode = "todate"),
+  #           list(step = "all"))),
+  # 
+  #       rangeslider = list(type = "date"),
+  #       range = c( input$date_range[1], input$date_range[2])
+  #     ),
+  # 
+  #     yaxis = list(title = paste0("Level (", input$units_2, ")"))
+  # 
+  #   ) %>%
+  # 
+  #   config(displayModeBar = FALSE)
 
 })
 

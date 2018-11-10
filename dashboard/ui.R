@@ -2,6 +2,8 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	title=HTML('<div><a href="http://ucwater.org/" target="_blank"><img src="./img/small_logo.png" width="80%"></a></div>'),
 	tabPanel("Hydrographs", value="commChart"),
 	tabPanel("Network", value="network"),
+	tabPanel("Site Info", value="site"),
+	tabPanel("Recharge", value="recharge"),
 	tabPanel("About", value="about"),
 	windowTitle="UC Water | Groundwater Observatory",
 	collapsible=TRUE,
@@ -19,7 +21,9 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		       fluidRow(
 		                column(6, 
 		                       selectInput("location", "Monitoring Well ID", 
-		                       c("", colnames(well_dat_daily)[-1]), 
+		                       # c("", colnames(well_dat_daily)[-1]),
+		                       # c("", pull(cs_coords, Location)),
+		                       c("", w),
 		                       selected="", multiple=F, width="100%")),
 		                column(6, 
 		                       selectInput("units", "Units", c("meters", "feet"), 
@@ -41,15 +45,15 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	
 	# row 3
 	fluidRow(
-		column(2, actionButton("help_loc_btn", "Project Description", class="btn-block"), br()),
-		column(2, actionButton("help_rcp_btn", "Groundwater Recharge", class="btn-block")),
+		column(4, actionButton("help_loc_btn", "Help", class="btn-block"), br()),
+		# column(2, actionButton("help_rcp_btn", "Groundwater Recharge", class="btn-block")),
 		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
-	bsModal("modal_loc", "Project Description", "help_loc_btn", size="large",
-		includeMarkdown("www/proj_desc.md")),
-	
-	bsModal("modal_rcp", "Groundwater Recharge", "help_rcp_btn", size="large",
-		includeMarkdown("www/recharge_info.md"))
+	bsModal("modal_loc", "Help", "help_loc_btn", size="large",
+		includeMarkdown("www/help.md"))#,
+
+	# bsModal("modal_rcp", "Groundwater Recharge", "help_rcp_btn", size="large",
+	# 	includeMarkdown("www/recharge_info.md"))
 	),
 	
 	
@@ -86,7 +90,16 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	),
 	
 	
+	# site info
+	conditionalPanel("input.tsp=='site'", includeMarkdown("www/proj_desc.md")),
+	                 
+	# recharge
+	conditionalPanel("input.tsp=='recharge'",includeMarkdown("www/recharge_info.md")),
+	
+	
   # about panel
   conditionalPanel("input.tsp=='about'", includeMarkdown("about.md")) #source("about.R",local=T)$value)
+	
+	
 
-))
+	))

@@ -15,9 +15,11 @@ The code for this open source project can be found in [this Github repository](h
 ## Team
 Dr. Graham Fogg, Project Lead | Univeristy of California, Davis  <br/>
 
-Amy Yoder, Masters Candidate | University of California, Davis  <br/>
+Amy Yoder, M.S. | University of California, Davis  <br/>
 
-Andrew Calderwood, Undergraduate Research Assistant | University of California, Davis  <br/>
+Andrew Calderwood, Research Assistant | University of California, Davis  <br/>
+
+Nathan Hatch, Research Assistant | University of California, Davis  <br/>
 
 Rich Pauloo, PhD Candidate | University of California Davis <br/>
 [Github](http://github.com/richpauloo) | [Website](https://richpauloo.github.io) | [LinkedIn](https://www.linkedin.com/in/rpauloo)  
