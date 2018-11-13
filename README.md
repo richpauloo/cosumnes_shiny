@@ -26,10 +26,13 @@ The `dashboard` folder contains (among other files), the three files comprising 
 Together, these files build the app.  
 
 
-# Notes
-
-If you aim to set of a monitoring well network of your own, this software is free to use for your purposes. You will need a skilled R programmer familiar with Shiny to integrate your hardware with this software.  
-
-The `log.md` file in the main directory is a daily log of activities during the process of building the app and contains valuable insights for those following in these footsteps.  
+# Repurposing this code
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+
+If you aim to set of a monitoring well network of your own, this software is free to use for commercial and non-commercial purposes. Please reference this work in your derivative products.  
+
+You will need a skilled R programmer familiar with Shiny to integrate your hardware with this software.  
+
+On that note, the `log.md` file in the main directory is a daily log of activities during the process of building the app and contains valuable insights for those following in these footsteps.  
+
