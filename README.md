@@ -5,9 +5,7 @@ This repo contains all the scripts necessary to build an interactive web dashboa
 As an example, please see the [Cosumnes River Groundwater Observatory](https://richpauloo.shinyapps.io/gw_observatory/), a project of UC Water.  
 
 ![](dash.png)  
-
-
-***  
+ 
 
 # Contents
 
@@ -27,13 +25,12 @@ The `dashboard` folder contains (among other files), the three files comprising 
 
 Together, these files build the app.  
 
-***  
 
 # Use
 
 If you aim to set of a monitoring well network of your own, this software is free to use for your purposes. You will need a skilled R programmer familiar with Shiny to integrate your hardware with this software.  
 
-
+The `log.md` file in the main directory is a daily log of activities during the process of building the app and contains valuable insights for those following in these footsteps.  
 
 
 
