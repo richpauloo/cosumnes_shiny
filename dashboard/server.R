@@ -11,19 +11,22 @@ observeEvent(input$location, {
 
 # leaflet output of wells
 output$Map <- renderLeaflet({
-	leaflet() %>% addProviderTiles(providers$Esri.WorldImagery) %>% #setView(lng=-121.378, lat=38.30139, zoom=13) %>%
-		addCircleMarkers(data=cs_coords, 
-		                 stroke=FALSE, 
-		                 fillOpacity=.6, 
-		                 color= "magenta",
-		                 radius = 5,
-		                 layerId = ~Location, 
-		                 label = ~hover_text,
+	leaflet() %>% 
+    addProviderTiles(providers$Esri.WorldImagery) %>% 
+		addCircleMarkers(data         = cs_coords, 
+		                 stroke       = TRUE, 
+		                 color        = "black",
+		                 opacity      = 1,
+		                 weight       = 1,
+		                 fillOpacity  = 0.7, 
+		                 fillColor    = "magenta",
+		                 radius       = 6,
+		                 layerId      = ~Location, 
+		                 label        = ~hover_text,
 		                 labelOptions = labelOptions(
-		                   offset = c(-50,-105),
-		                   #direction='bottom',
+		                   offset = c(-30,-60),
 		                   textOnly = T,
-		                   style=list(
+		                   style    = list(
 		                     'background'='rgba(255,255,255,0.95)',
 		                     'border-color' = 'rgba(0,0,0,1)',
 		                     'border-radius' = '3px',
@@ -151,8 +154,10 @@ output$network <- renderPlotly({
     geom_line(aes(color = wells)) +
     geom_smooth(color = "red") +
     scale_color_grey() +
-    labs(y = "Level") +
-    theme(legend.position='none')
+    labs(y = paste0("Level (", input$units_2, ")")) +
+    theme(legend.position='none') +
+    scale_x_datetime(limits = c( ymd(input$date_range[1], tz= "UTC"), 
+                                 ymd(input$date_range[2], tz = "UTC"))) 
   ggplotly(ggp)
     
   

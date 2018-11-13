@@ -55,6 +55,7 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	# bsModal("modal_rcp", "Groundwater Recharge", "help_rcp_btn", size="large",
 	# 	includeMarkdown("www/recharge_info.md"))
 	),
+
 	
 	
   # network panel	
@@ -68,7 +69,8 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	           column(6, 
 	                  dateRangeInput("date_range", "Date Range", 
 	                  start = min(well_dat_daily$Date), 
-	                  end = max(well_dat_daily$Date), width="100%")),
+	                  end = max(well_dat_daily$Date),
+	                  format = "yyyy-mm-dd", width="100%")),
 	           column(6, 
 	                  selectInput("units_2", "Units", 
 	                  c("meters", "feet"), selected="meters", 
@@ -77,6 +79,9 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	  )
 	),
 	bsTooltip("location", "Enter or select a monitoring well ID. You may also select a monitoring well using the map.", "top", options = list(container="body")),
+	
+	br(),
+	br(),
 	
 	fluidRow(
 	  column(12, 

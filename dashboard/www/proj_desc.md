@@ -4,9 +4,9 @@ output:
     css: styles.css
 ---
 
-<img src="www/oneto_site_pic_2.png" alt = "Study" style="width: 100%;"/>   
+<img src="oneto_site_pic_2.png" alt = "Study" style="width: 100%;"/>   
 
-The UC Water Security and Sustainability Research Initiative is increasing data accessibility for people in control of California's groundwater management. To do this, UC Water Masters student Alysa Yoder and UC Water Director Dr. Graham Fogg have designed and implemented a groundwater observatory covering the South American River sub-basin. 
+The <b>UC Water Security and Sustainability Research Initiative</b> is increasing data accessibility for people in control of California's groundwater management. To this end, UC Water Masters student Alysa Yoder and UC Water Director Dr. Graham Fogg have designed and implemented a groundwater observatory covering the South American River sub-basin. 
 
 <h2>Motivation</h2>
 The South American River Sub-basin Groundwater Observatory is a response to observed groundwater data shortages in California, and the management challenges caused by these shortages. The Sustainable Groundwater Management Act (SGMA) was passed in 2014. SGMA requires the constituents of California groundwater basins to form Groundwater Sustainability Agencies (GSAs). These GSAs will implement Groundwater Sustainability Plans (GSPs) by 2020. Implementation of a successful GSP means that the basin will have a sustainable groundwater supply by 2040. However, groundwater level data is not always available at the quality needed to develop a successful GSP. Providing access to real time groundwater level data will give GSAs tools that will help them be successful, as they will be able to analyze groundwater level trends throughout time, and increase their understanding of the cause and effect relationships that characterize their basin. UC Davis' vision for this project includes its eventual expansion. It is our intention to pave the way for other agencies and GSAs themselves to implement their own real-time groundwater monitoring systems, which will strengthen California's groundwater data resources. 

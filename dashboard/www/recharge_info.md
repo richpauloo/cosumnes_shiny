@@ -4,9 +4,9 @@ output:
     css: styles.css
 ---
 
-<img src="www/recharge_pic_2.png" alt="Drawing" style="width: 100%;"/>   
+<img src="recharge_pic_2.png" alt="Drawing" style="width: 100%;"/>   
 
-Groundwater recharge (also known as aquifer recharge) is the process of water moving from above the ground's surface through the ground until it reaches the underlying aquifer. Groundwater recharge can occur naturally, but it does not always keep up with the rate at which groundwater is pumped for human use. This is groundwater overdraft. Groundwater overdraft can cause undesirable results such as degradation of groundwater quality, land subsidence, and decreases in available water. 
+<b>Groundwater recharge (also known as aquifer recharge)</b> is the process of water moving from above the ground's surface through the ground until it reaches the underlying aquifer. Groundwater recharge can occur naturally, but it does not always keep up with the rate at which groundwater is pumped for human use. This is groundwater overdraft. Groundwater overdraft can cause undesirable results such as degradation of groundwater quality, land subsidence, and decreases in available water. 
 
 <h2>Managed Aquifer Recharge</h2>
 To mitigate the undesirable results of groundwater overdraft, efforts are being made to force the process of groundwater recharge. This is managed aquifer recharge (MAR). Types of MAR include infiltration ponds, agricultural groundwater banking, injection wells and levee removal. Both agricultural groundwater banking and levee removal are implemented within the South American Sub-basin Groundwater Observatory. 
