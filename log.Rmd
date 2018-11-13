@@ -415,10 +415,19 @@ November 8, 2018
 ***  
 
 
+November 13, 2018  
+
+* Completed app.  
+* Running at `richpauloop.shinyapps.io/gw_observatory`  
+
+
+***  
+
+
 Additional Feautures Wishlist (in no order)  
 
-* battery changes in level senders also require a hotfix. This can probably be scripted in and controlled by an external CSV.  
-`clean/dependencies/ll_battery_outages.csv`  
+* move site to shiny server with vanity domain name  
+* battery changes in level senders also require a hotfix. This can probably be scripted in and controlled by an external CSV, something like `clean/dependencies/ll_battery_outages.csv`  
 
 
 
