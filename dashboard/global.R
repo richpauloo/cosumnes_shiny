@@ -96,7 +96,7 @@ well_dat_daily <- gather(present, ls_id, level, -dt) %>%
   as_tbl_time(index = dt) %>% 
   collapse_by("daily") %>% 
   group_by(dt) %>% 
-  summarise_all(mean) %>% 
+  summarise_all(mean, na.rm = TRUE) %>% 
   mutate(dt = round_date(.$dt, "day")) %>% 
   rename(Date = dt) %>% 
   left_join(well_dat_daily, by = "Date") 
