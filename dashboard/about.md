@@ -24,8 +24,8 @@ Nathan Hatch, Research Assistant | University of California, Davis  <br/>
 Rich Pauloo, PhD Candidate | University of California Davis <br/>
 [Github](http://github.com/richpauloo) | [Website](https://richpauloo.github.io) | [LinkedIn](https://www.linkedin.com/in/rpauloo)  
 
-For questions specific to UC Water, please contact [Graham Fogg](gefogg@ucdavis.edu).  
-For questions about this web application, please contact [Rich Pauloo](richpauloo@gmail.com).  
+For questions specific to UC Water, please contact **Graham Fogg**, gefogg at ucdavis dot edu    
+For questions about this web application, please contact **Rich Pauloo**, richpauloo at gmail dot com    
 
 ***
 

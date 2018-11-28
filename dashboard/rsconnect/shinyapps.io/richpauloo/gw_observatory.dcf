@@ -5,9 +5,9 @@ account: richpauloo
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 305475
-bundleId: 1699062
+bundleId: 1709746
 url: https://richpauloo.shinyapps.io/gw_observatory/
-when: 1542139541.58677
+when: 1542673426.08541
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: about.R|scratch.R|data/well_dat.RData

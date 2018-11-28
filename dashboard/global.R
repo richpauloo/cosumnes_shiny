@@ -1,28 +1,30 @@
-library(shiny)
-library(shinythemes)
-library(shinyBS)
-library(leaflet)
-library(tidyr)
-library(plotly)
-library(DBI)
-library(dplyr)
-library(lubridate)
-library(readr)
-library(stringr)
-library(anytime)
+lp <- "/zeolite/rpauloo/R/x86_64-pc-linux-gnu-library/3.4"
 
-# well location is built into the code, meaning every time a well is added, the code will need to be updated.
-# cs_coords2 <- data.frame(lat = c(38.31263, 38.30505, 38.30488, 38.29666, 38.30271, 38.2967, 38.29174, 38.29183, 38.30517, 38.30965, 38.30967, 38.2967, 38.30101),
-#                         lng = c(-121.379, -121.381, -121.369, -121.374, -121.379, -121.379, -121.382, -121.391, -121.391, -121.376, -121.384, -121.382, -121.384),
-#                         Location = c("MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13")
-#                         )
-# 
+library(shiny,       lib.loc = lp)
+library(DBI,         lib.loc = lp)
+library(dplyr,       lib.loc = lp)
+library(shinythemes, lib.loc = lp)
+library(shinyBS,     lib.loc = lp)
+library(leaflet,     lib.loc = lp)
+library(tidyr,       lib.loc = lp)
+library(withr,       lib.loc = lp)
+library(ggplot2,     lib.loc = lp)
+library(plotly,      lib.loc = lp)
+library(lubridate,   lib.loc = lp)
+library(readr,       lib.loc = lp)
+library(stringr,     lib.loc = lp)
+library(anytime,     lib.loc = lp)
+library(RMySQL,      lib.loc = lp)
+library(tibbletime,  lib.loc = lp)
+
+# disable sanitize_errors
+options(shiny.sanitize.errors = FALSE)
+
 # read password for SQL database with groundwater level
-pw <- read_rds("data/pw.rds")
-# pw <- read_rds("data/pw.rds")
+pw <- read_rds("/srv/shiny-server/gw_obs/data/pw.rds")
 
 # connect to UC Davis MySQL db
-cdb <- dbConnect(RMySQL::MySQL(),
+cdb <- dbConnect(MySQL(),
                  user = "gw_observatory",
                  password = pw,
                  host = "169.237.35.237",
@@ -42,12 +44,6 @@ cs_coords <- cs_coords[ , c("lat", "lng", "mw_name","ls_id")] %>%
 # wells
 w <- levels(cs_coords$Location)[which(levels(cs_coords$Location) != "X284222")] # remove bothersome well
 
-# battery life will come in as a df from MySQL
-# battery_df = data.frame(Location = c("MW2", "MW9", "MW11", "MW20", "OnetoAg", "MW19", "MW23", "MW22", "MW7", "MW5", "MW3", "MW17", "MW13"), 
-#                         battery = 88:100)
-# add battery info to well_cords
-# left_join(cs_coords, battery_df, by = "Location") -> cs_coords
-
 
 # add custom labels. http://rpubs.com/bhaskarvk/electoral-Map-2016.
 cs_coords$hover_text <- mapply(
@@ -58,7 +54,6 @@ cs_coords$hover_text <- mapply(
         <div style='width:95%%'>
         <span style='font-size:12px'>Latitude: %s</span><br/>
         <span style='font-size:12px'>Longitude: %s</span><br/>
-        
         
         </div>
         </div>",
@@ -78,9 +73,8 @@ cs_coords$hover_text <- mapply(
 ##############################################################################
 
 # # bring in clean test data for now - need to experiment with .RData in SQL
-load("data/well_dat_daily.RData")
-# # load("data/well_dat_daily.RData")
-# well_dat_daily <- well_dat_daily %>% as.data.frame()
+# load("data/well_dat_daily.RData")
+load("/srv/shiny-server/gw_obs/data/well_dat_daily.RData")
 well_dat_daily$Date <- round_date(well_dat_daily$Date, "day")
 
 # bring in clean test data for now - need to experiment with .RData in SQL
@@ -88,23 +82,25 @@ present <- dbReadTable(cdb, "present")
 present$dt <- lubridate::ymd_hms(present$dt)
 
 # convert dates and levels to correct class
-library(tibbletime)
 well_dat_daily <- gather(present, ls_id, level, -dt) %>% 
   mutate(level = as.numeric(level)) %>% 
   filter(!is.na(dt)) %>% 
   spread(ls_id, level) %>% 
   as_tbl_time(index = dt) %>% 
   collapse_by("daily") %>% 
-  group_by(dt) %>% 
+  group_by(dt) %>%
   summarise_all(mean, na.rm = TRUE) %>% 
   mutate(dt = round_date(.$dt, "day")) %>% 
   rename(Date = dt) %>% 
   left_join(well_dat_daily, by = "Date") 
+
 
 ##############################################################################
 
 # caption below hydrograph on first tab
 caption <- 'These monitoring wells reflect the water table elevation in the South American River subbasin, and may not be accurate. For more information on research by UC Water, please visit'
 
+# disconnect from cloud database
+dbDisconnect(cdb)
 
 
