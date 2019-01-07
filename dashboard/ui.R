@@ -2,6 +2,8 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	title=HTML('<div><a href="http://ucwater.org/" target="_blank"><img src="./img/small_logo.png" width="80%"></a></div>'),
 	tabPanel("Hydrographs", value="commChart"),
 	tabPanel("Network", value="network"),
+	tabPanel("Site Info", value="site"),
+	tabPanel("Recharge", value="recharge"),
 	tabPanel("About", value="about"),
 	windowTitle="UC Water | Groundwater Observatory",
 	collapsible=TRUE,
@@ -19,7 +21,9 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 		       fluidRow(
 		                column(6, 
 		                       selectInput("location", "Monitoring Well ID", 
-		                       c("", colnames(well_dat_daily)[-1]), 
+		                       # c("", colnames(well_dat_daily)[-1]),
+		                       # c("", pull(cs_coords, Location)),
+		                       c("", w),
 		                       selected="", multiple=F, width="100%")),
 		                column(6, 
 		                       selectInput("units", "Units", c("meters", "feet"), 
@@ -41,16 +45,17 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	
 	# row 3
 	fluidRow(
-		column(2, actionButton("help_loc_btn", "Site Info", class="btn-block"), br()),
-		column(2, actionButton("help_rcp_btn", "Recharge", class="btn-block")),
+		column(4, actionButton("help_loc_btn", "Help", class="btn-block"), br()),
+		# column(2, actionButton("help_rcp_btn", "Groundwater Recharge", class="btn-block")),
 		column(7, h5(HTML(paste(caption, '<a href="http://ucwater.org/" target="_blank">ucwater.org</a>'))))
 	),
-	bsModal("modal_loc", "Site Information", "help_loc_btn", size="large",
-		includeMarkdown("www/site_info.md")),
-	
-	bsModal("modal_rcp", "Floodplain Recharge", "help_rcp_btn", size="large",
-		includeMarkdown("www/recharge_info.md"))
+	bsModal("modal_loc", "Help", "help_loc_btn", size="large",
+		includeMarkdown("www/help.md"))#,
+
+	# bsModal("modal_rcp", "Groundwater Recharge", "help_rcp_btn", size="large",
+	# 	includeMarkdown("www/recharge_info.md"))
 	),
+
 	
 	
   # network panel	
@@ -64,7 +69,8 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	           column(6, 
 	                  dateRangeInput("date_range", "Date Range", 
 	                  start = min(well_dat_daily$Date), 
-	                  end = max(well_dat_daily$Date), width="100%")),
+	                  end = max(well_dat_daily$Date),
+	                  format = "yyyy-mm-dd", width="100%")),
 	           column(6, 
 	                  selectInput("units_2", "Units", 
 	                  c("meters", "feet"), selected="meters", 
@@ -73,6 +79,9 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	  )
 	),
 	bsTooltip("location", "Enter or select a monitoring well ID. You may also select a monitoring well using the map.", "top", options = list(container="body")),
+	
+	br(),
+	br(),
 	
 	fluidRow(
 	  column(12, 
@@ -86,7 +95,16 @@ shinyUI(navbarPage(theme=shinytheme("spacelab"),
 	),
 	
 	
+	# site info
+	conditionalPanel("input.tsp=='site'", includeMarkdown("www/proj_desc.md")),
+	                 
+	# recharge
+	conditionalPanel("input.tsp=='recharge'",includeMarkdown("www/recharge_info.md")),
+	
+	
   # about panel
   conditionalPanel("input.tsp=='about'", includeMarkdown("about.md")) #source("about.R",local=T)$value)
+	
+	
 
-))
+	))
