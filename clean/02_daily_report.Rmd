@@ -179,5 +179,18 @@ include_graphics("bl_bat_map.png")
 # ggplot of last 30 days of data
 ggp <- read_rds("ggp.rds")
 ggp
+
+# text_df <- ggp$data %>% 
+#   filter(!is.na(level)) %>% 
+#   group_by(id) %>% 
+#   mutate(pos = 1:n()) %>% 
+#   ungroup() %>% 
+#   dplyr::arrange(desc(dt)) %>% 
+#   filter(pos == 1)
+# 
+# ggp$data %>% 
+#   ggplot() + 
+#   geom_line(aes(dt, level, color = id)) + 
+#   geom_label_repel(data = text_df, aes(dt, level, label = id, color = id), hjust = 1, nudge_y = 1)
 ```
 

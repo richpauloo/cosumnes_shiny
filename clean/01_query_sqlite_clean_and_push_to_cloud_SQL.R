@@ -389,9 +389,14 @@ get_bat_life <- function(v){
     bat_df$unit <- c("Sender", "Logger","Baro")
   }
   
-  # if the well != mw5
-  if (ss == 0) {
+  # if the well != mw5 and has a level sender and logger
+  if (ss == 0 & nrow(bat_df) == 2) {
     bat_df$unit <- c("Sender", "Logger")
+  }
+  
+  # if the well != mw5 and only has a sender. happens during test emails
+  if (ss == 0 & nrow(bat_df) == 1) {
+    bat_df$unit <- c("Sender")
   }
   
   return(bat_df)
