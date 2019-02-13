@@ -42,8 +42,8 @@ d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
 ####################################################################################
 #Filter for all emails within a 120 day window of the current date.
 ####################################################################################
-# 30 day rolling window
-current <- Sys.Date() - 30
+# 31 day rolling window
+current <- Sys.Date() - 31
 
 # add another date column without times
 d$date_2 <- as_date(d$date)
@@ -421,7 +421,7 @@ write_rds(battery_life_df, "C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/cle
 
 # write plot attachment
 library(ggplot2)
-ggp <- ggplot(rows_to_append, aes(dt, level, color = factor(id))) + 
+ggp <- ggplot(rows_to_append %>% filter(dt >= current), aes(dt, level, color = factor(id))) + 
   geom_line() +
   labs(title    = paste("Adjusted Groundwater Levels, last updated:", Sys.Date()),
        subtitle = "Showing last 30 days",
@@ -460,7 +460,7 @@ use_secret_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oa
 emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
   pull(email)
 
-# compose and send email
+# compose and email report
 for(i in 1:length(emails)){
   mime() %>% 
     from("cosumnes.gw.observatory@gmail.com") %>% 
@@ -471,6 +471,24 @@ for(i in 1:length(emails)){
     send_message()
   
     Sys.sleep(5)
+}
+
+# find low battery
+low_bat_life <- filter(battery_life_df, bat <= 69)
+subject <- paste0("WARNING!! LOW BATTERY LIFE in LS ID # ", paste(low_bat_life$id, collapse = ", "),"!!")
+
+# compose and send warning battery email
+if(nrow(low_bat_life) >= 1){
+  for(i in 1:length(emails)){
+    mime() %>% 
+      from("cosumnes.gw.observatory@gmail.com") %>% 
+      to(emails[i]) %>% 
+      subject(subject) %>% 
+      text_body("See the daily report email for details. Rapidly change batteries to avoid a disruption in service.") %>% 
+      send_message()
+    
+    Sys.sleep(5)
+  }
 }
 
 
