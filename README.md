@@ -26,6 +26,11 @@ The `dashboard` folder contains (among other files), the three files comprising 
 Together, these files build the app.  
 
 
+# Shiny Server
+
+On shiny server, the app files are located at `/srv/shiny-server/gw_obs`.  
+
+
 # Repurposing this code
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
