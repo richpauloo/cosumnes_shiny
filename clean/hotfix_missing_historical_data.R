@@ -5,7 +5,7 @@
 nam <- dbListTables(cdb) # names of tables in database
 l <- lapply(nam, function(x){return(dbReadTable(cdb, x))}) # read all tables
 sapply(l, nrow) # nrow of each table: where was the data lost?
-
+data.frame(sapply(l, nrow), dbListTables(cdb))
 
 ####################################################################################
 # Connect to cloud database
@@ -54,3 +54,6 @@ complete <- spread(complete, key = "id", value = "level")
 
 # overwrite existing "present" table
 dbWriteTable(cdb, "present", complete, overwrite = TRUE) # overwrite existing table
+
+dbDisconnect(db)  # SQLite
+dbDisconnect(cdb) # cloud SQL

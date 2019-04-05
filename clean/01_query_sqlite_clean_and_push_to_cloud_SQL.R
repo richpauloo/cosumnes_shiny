@@ -43,7 +43,7 @@ d$date <- as.POSIXct( strptime( d$date, "%Y-%m-%d %H:%M:%S" ) )
 #Filter for all emails within a 120 day window of the current date.
 ####################################################################################
 # 31 day rolling window
-current <- Sys.Date() - 31
+current <- Sys.Date() - 90
 
 # add another date column without times
 d$date_2 <- as_date(d$date)
