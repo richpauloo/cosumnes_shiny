@@ -1,0 +1,219 @@
+---
+title: "Groundwater Observatory Handbook"
+author: "Andrew Calderwood"
+date: 'Last Update: `r format(Sys.time(), "%d %B, %Y")`'
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
+subtitle: Implementation, Development, and Maintenance of the Cosumnes River Groundwater
+  Observatory
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## , ''%d %B, %Y'' # old format used in Last Update in header
+
+```
+
+
+# Background and Motivation  
+Continuous groundwater data in California has been rarely available to the public in the past. Continuous data allows water users to better view fluctuations on daily, monthly and yearly scales when previously groudwater levels were manually sampled twice a year, fall and spring. The goal of the Groundwater Observatory is to provide continuous data on a daily basis using connected pressure transducers and telemetry. The project was completed on a small scale to determine the logistics in managing a groundwater monitoring network and to look at how daily data changes the perspective on groundwater fluctuations. Daily reported groundwater data can allow water supply managers to determine if the groundwater is being depleted and to help reach sustainability required by SGMA.    
+
+# Project Scope
+The South-American River Basin Groundwater Dashboard was originally planned for fifteen LevelSender installations. This number of installations was chosen to act as a pilot project for a larger collection of monitoring units. Two difficulties with expanding the scope of the project are the cost of purchasing and installing the LevelSender units and the maintenance of their connection to the web dashboard, along with the connection of new units. 
+
+# Site Planning and Choice
+Cellular Reception Strength: Each potential well for a LevelSender unit must have sufficient cellular service in order to send and receive emails. According to Solinst, 1-2 bars means there may be issues with data transmission; additionally any objects that block the antenna may further harm the signal. Potential cell service inhibitors include steel well housings that cover the well head where the LevelSender would be installed.  
+
+Choosing a service provider: We had an option between T-mobile and AT&T, but went with AT&T because it had greater reception strength at our sites. 
+
+Flooding concerns: Several of the sites on the South-American River Basin will be subject to flooding which raised the concern whether the units will be safe. At a farm with planned flooding the LevelSender units were placed on a PVC pipe attached to a u-channel approximately three feet above the ground. The other site is a floodplain next to the river and the units are placed in the well housing which should protect them from the elements. 
+
+Barrologger location: Solinst suggests that a Barrologger should be within twenty (20) miles of a pressure transducer that will use it for compensation. The project of fifteen wells was small enough that one Barrologger has covered all the wells we have installed. 
+
+# Physical Installation  
+
+## Field work equipment:  
+* Steel tape and chalk for wells with difficult access points
+* Solinst Water Level meter
+* Levelogger computer cable
+* LevelSender computer cable
+* Gloves
+* Field laptop
+* Field notebook and pen or pencil
+* Screwdriver
+* Pipe Wrench
+* Measuring tape
+* Zip ties
+* Duct tape
+
+## Standard install in monitoring well:
+The [Solinst user guide](https://www.solinst.com/products/dataloggers-and-telemetry/solinst-telemetry-systems/9500-levelsender/instructions/user-guide/user-guide.php) shows the installation of a LevelSender unit on a monitoring well without a well housing. However, many monitoring wells have housings to protect them from tampering or vandalism which may obstruct the installation of the LevelSender unit (see Figure \ref{fig:fig1}). There needs to be sufficient room from the top of the standpipe to the well housing cap for the black well cap assembly to fit (see Figure \ref{fig:fig2}). At the beginning of the project, the LevelSender black caps were left on and duct tape was used to seal the well housing (see Figure \ref{fig:fig4}) when there was insufficient height (see Figure \ref{fig:fig3}). This can be remedied by removing the top inch of the standpipe, but it's important to account for the loss in height when taking manual measurements. An alternate solution is to not install the black cap if the well housing is sufficient to protect the LevelSender from water and dirt. 
+
+Coiling the extra cable on the metal bracket can be difficult because if it is not tightly secured then the cable may bunch up and prevent you from inserting the LevelSender into the pipe. A quick fix to having too much cable is to create a thin bunch of cable somewhere in the middle that you can zip tie together which can reduce the cable length depending on how many loops are tied in. 
+
+For the project we ordered a variety of cable lengths to fit different situations, however, we were forced to use cables with extra length which we resolved by coiling it and then zip tying the coils in a tight bundle that would fit down the well. One issue with the extra cable is placing it cleanly in the well, we have one well in particular where each time we check on the unit and reinsert it the pressure transducer ends up at a slightly different depth because the cable got caught or bunched in a different manner. The best solution to this is to purchase a cable of the exact length needed which depends on the lowest water level of the year (typically mid-summer) because you don't want the transducer to go dry and then you avoid having to shorten the cable.
+
+<center>
+```{r , echo = F, out.width= "500px", out.extra='angle=-90', fig.cap="\\label{fig:fig1} LevelSender installed on a monitoring well enclosed by a square metal housing where the housing had sufficient room to fit the black cap."}
+ 
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/MW_DR1.jpg')
+```
+
+
+```{r , echo = F, out.width= "500px",  fig.cap="\\label{fig:fig2} The round well housing almost sits closed with the black cap installed on the LevelSender."}
+ 
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/MW5.jpg')
+```
+
+
+```{r , echo = F, out.width= "500px", out.extra='angle=-90', fig.cap="\\label{fig:fig3} The black cap on the LevelSender prevented this well housing lid to sit flat which could lead to issues if it needs to be locked or to prevent debris or water from entering the housing."}
+ 
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/MW19.jpg')
+```
+
+
+```{r , echo = F, out.width= "500px", fig.cap="\\label{fig:fig4} The well housing lid did not sufficiently close when the black cap was installed so duct tape was initially used to create a seal against dirt and other debris during flooding."}
+ 
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/MW22.jpg')
+```
+</center>  
+
+## Agricultural or pumping well installations
+Agricultural pumping wells draw water from a pipe connected to a pump placed inside the well below the water elevation within a small protective casing. They typically have a second access point to the well casing used to check the water level, these access points vary in diameter from half an inch to two inches in diameter and enter the well vertically from the top of the concrete slab or from a thirty to forty-five degree angle. The angled access points present a problem for the Leveloggers because of the junction between the angle down and the vertical pipe inside which prevents the Levelogger from entering the well because it is too long. 
+
+The other issue may be that the access point diameter is smaller than the diameter of the Levelogger. In any case, the LevelSender can't be directly installed in the well because there is no standard standpipe for the well cap assembly to be placed on; instead, we have discovered it is convenient to place the reader cable in a protective casing along the ground to the LevelSender mounted on a PVC pipe attached to a u-channel (see Figure \ref{fig:fig5}). This presents some difficulty with sealing the access point because the threaded cap may not be placed back on with the reader cable, we corrected this in some situations using caulking as a sealant or duct tape (see Figure \ref{fig:fig6}). For a more stringent installation, we mounted a series of PVC connections to end at a two inch PVC pipe for the well cap assembly to sit on so that the access point was sealed all the way to the LevelSender cap. 
+
+Pumping concerns: Smaller agricultural and domestic wells can have drawdowns in the range of tens of feet which requires that the Levelogger be placed low enough in the well so that even after pumping there will still be water over the transducer. This will allow you to see the full range of the drawdown, however, the data when the well is pumping will be less accurate because of the turbulence the pump creates when drawing water. 
+Placing unit outside well: We typically installed a steel u-channel next to the pumping well using a post pounder to drive the u-channel one to two feet into the ground. Then we hose clamped a two to three foot piece of PVC pipe to the u-channel with approximately three inches of pipe above the steel for the well cap assembly to be placed on. 
+
+<center>
+```{r , echo = F, out.width= "500px", fig.cap="\\label{fig:fig5} The reader cable is protected inside the black plastic tubing, the hose clamps secures the reader cable to the edge of the access point so it does not move. Duct tape was used at this site to prevent debris from entering the access point."}
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/UCD26_all.jpg')
+```
+
+
+```{r , echo = F, out.width= "500px", out.extra='angle=-90', fig.cap="\\label{fig:fig6} The LevelSender is mounted on 2 inch PVC pipe attached to a U-channel with hose clamps. The reader cable runs along the ground protected by bricks on either side."}
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/UCD26_access.jpg')
+```
+</center>
+
+## Well housing modifications
+At all of our monitoring well installations the standpipe is encased by a locking steel housing to protect the well head. Originally we installed LevelSender units completely below the steel housing, sometimes without the black assembly cap, but noticed that often times the unit would have issues sending emails and go a week before sending an email. We determined this was a combination of cellular service fluctuations and the steel cap blocking the signal; most likely on days with stronger cellular service the units could send the emails and fail on days with weaker service. The solution was to install antenna extension cables (see Figure \ref{fig:fig7}) and mount the original antennas on top of the steel caps (see Figure \ref{fig:fig8}) using a pigtail adapter. The antenna extension required: an antenna extension cable with a male plug SMA to a female jack SMA pigtail connection with a lock washer and nut to mount in the hole we drilled, a thicker o-ring for the antenna opening on the lid because the antenna extension cable was thinner than the plastic antennas base and a nylon washer or rubber grommet to seal the pigtail threaded through the hole drilled in the steel cap. 
+
+In the field, we drilled a hole through the well cap that was approximately ¼" which was big enough for the SMA female jack to fit through, put on the rubber grommet, tightened on the nut and threaded on the antenna. One issue that arose was that the female jack didn't have enough thread for a whole rubber grommet, nut and the antenna threads. To fix this we cut the grommet in half and only threaded on the antenna which was sufficient to hold the cable in place because it was a very short cable with very little weight on it. To install the SMA plug male to the LevelSender unit we removed the original o-ring from the antenna hole and slid the thicker o-ring on the cable then slid the cable end through the plastic lid. We threaded the SMA plug male onto the LevelSender unit and then pushed the new o-ring into place in the antenna hole. The lid could then be pressed back on as usual, but the assembly cap could not be put on because of the cable; if desired one could drill a hole through the assembly cap as well and seal it with a rubber grommet. One issue with the antenna extension cable in hot locations is that the shrink wrap on the connector ends of the wire may slide when taking off the lid to replace batteries or reset the unit, but it may be slid back in place when replacing the lid. 
+
+<center>
+```{r , echo = F, out.width= "500px", fig.cap="\\label{fig:fig7} The LevelSender is mounted on 2 inch PVC pipe. The antenna was removed from the unit and was replaced with a SMA male to female cable with one end threaded into the unit and the other mounted on the steel lid."}
+
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/LS_ext_cab.jpg')
+```
+
+
+```{r , echo = F, out.width= "500px", out.extra='angle=-90', fig.cap="\\label{fig:fig8} The antenna is reattached to the unit through the SMA pigtail mounted on top of the steel lid allowing for better reception."}
+knitr::include_graphics('/Users/ajcalder/Documents/Ex_Pic_GWO/LS_ext_ant.jpg')
+```
+</center>
+
+## Installing SIM cards
+Make sure that SIM cards have been activated before attempting to install them in the field. Occasionally a LevelSender may fail the carrier service part of the reset, if this happens and the SIM card had previously worked then remove it and replace it before trying the reset again. 
+
+# Software
+Programming LevelSenders the first time:
+We used gmail.com for the first iteration of LevelSender unit emails and home station emails. However, when we reached the seventh installation we found out the google email service only supports ten (10) email addresses per phone number; the maximum number of LevelSenders for a given phone number would be nine (9) because one (1) email would be needed for the home station email. Another issue with gmail was the security settings that had to be disabled with pop3, but they seemed to revert themselves somehow making it difficult to do email resets of the LevelSeder units. We then used yahoo mail for a few addresses, but this created complications because half of the units would have different log on settings which would become confusing in the field when doing LevelSender resets. 
+
+Eventually, we asked the UC Davis METRO-IT department to create a set amount of email address for our LevelSender units and several home station email addresses using Office 365 Outlook through the UC Davis email. In addition, we continued to use one gmail address for outgoing emails from the units and the home stations because outgoing emails require an email enabled for less secure apps. We created multiple home station emails because when using one email address on multiple computers each time someone retrieves emails the person on the other computer won't receive those emails. For the majority of the project we operated with two email addresses while getting the LevelSenders up and running. Toward the end of the project when we began to implement a live web dashboard for displaying the water levels, we created a third home station email for the web dashboard to independently retrieve data and attempted to add it to the LevelSenders. Although the third email address was added, not all of  the LevelSenders reported to it and Solinst engineerings are looking into why adding a third email address didn't work [Revise when Mauricio responds with update]. 
+
+# Long term maintenance
+## Battery Replacement: 
+Solinst recommends changing the LevelSender batteries when the units begin reporting 60%. For hourly sampling and daily reporting the unit is expected to have a battery life of four years with one datalogger and 3.3 years with two dataloggers. For hourly sampling and 6 hour reporting intervals the batteries have a life of 1 year with one datalogger and 11 months with two dataloggers. At the beginning of the project we were using 6 hour reporting intervals to have faster email response times when trying to troubleshoot reporting problems. 
+
+This is important to keep in mind because one of the first LevelSenders we installed had a Levelogger and Barrologger connected and began at a 6 hour reporting interval. Eventually we changed the reporting interval over to daily but this was still the first LevelSender to have batteries die. We didn't notice the low battery until the LevelSender began reporting -0.10 m for the Barrologger while the battery was below 60%. We have reported this issue to Solinst and they are working on what caused the reporting errors. Once below 60% the battery level began to drop much faster and the LevelSender finally stopped reporting once it reached 55%. Although Solinst recommends changing the batteries at 60% it is important to notice when the battery level drops below 70% or 65% depending on how long it may take to schedule a field visit to replace the batteries and how important it is that the LevelSender doesn't stop reporting. 
+
+## Software Updates: 
+Software updates may be installed directly from the [Solinst website](https://www.solinst.com/downloads/). We have had no issues with Software updates, nothing in the user interface or data was changed by the update. Updating the software may create compatibility problems with the LevelSenders when the connecting them to the computer directly; however the computer will have no issues receiving emails from the units. 
+
+## Firmware Updates: 
+It's important to carefully follow the Solinst guide for updating the firmware of LevelSenders. Sometimes the software may not be compatible with the new firmware or old firmware so make sure that you have two computers with each software installed in case the LevelSender will not correctly connect to the first one. However this issue may go away as the software engineers at Solinst are working to make sure that all software versions are compatible with the firmware versions. 
+
+# Web Dashboard:
+## Data Processing:
+All the code required to build this Groundwater Observatory is located in this [Github repository](https://github.com/richpauloo/cosumnes_shiny) by Rich Pauloo.
+
+### Processing water level data to water elevation data
+
+Raw Levels: The processing program uses LevelSender ID or Levelogger ID, Levelogger ID is used in the case where there are two loggers attached, to identify the incoming level data from the LevelSender. 
+
+Barometric Pressure Data: The barometric pressure gage for our project was jointly installed with a Levelogger using a splitter. The processing program uses the Levelogger ID rather than the LevelSender ID to identify the data coming from the Barrologger; the barometric pressure data is then converted from PSI to meters and stored. 
+
+Reference Point Elevation: Our reference point elevations came from a combination of GIS and google maps because this was a pilot project and we were not concerned with very fine accuracy. In addition groundwater fluctuations are on the magnitude of feet and meters so an error of inches or centimeters is acceptable. 
+
+Manual Measurements: Manual depth to water measurements were taken at the time of LevelSender installation to calculate the water elevation above mean sea level (AMSL) using the reference point elevation. The manual measurement will not exactly align with a level and time taken by the LevelSender so the program pulls the closest time and then calculates water elevation with it. The depth to water measurements in feet are converted to meters and then the water elevation is calculated in meters.
+Table of manually determined data: The Levelogger ID's, LevelSender ID's, reference point elevations in meters, depth to water in meters and calculated water surface elevation in meters. These data will remain constant for several months at a time, however, the depth to water will change every several months to verify the accuracy of the data.  
+
+### Issues with automation and manual measurements
+
+At this moment there is an issue with inputting multiple manual measurements because the code is designed to pull the last thirty days of water levels and compensate it all at once. However, when a new manual measurement is taken it is supposed to be applied to all forthcoming data and the previous manual measurement should apply to all previous data. There is most likely a solution to this problem, but there wasn't sufficient time available to come up with a working solution. 
+
+Issues with changing the cable length: One issue with the changing cable length for the LevelSenders is that they will then report a different level of water above the transducer. This was fine when manually compensating the data and transforming it to water level above mean sea level, however, it isn't as simple trying to automate the process. When automating the process we didn't have an easy way to have the computer use one manual measurement for a certain set of dates and another manual measurement for other sets; we take manual measurements every few months but not at the exact same time for all the wells which makes it difficult to make the process automatic with user intervention. 
+
+## Automation:
+Everyday the processing code in R is automatically run which pulls the last thirty days of groundwater levels. These groundwater levels are then compensated for barometric pressure, and adjusted to a water elevation using the ground surface elevation and calculated cable length.
+
+If a LevelSender doesn't report to the processing computer then it will not receive the groundwater level data and can't complete the regular processing. The main cause for a loss of a report is if the batteries in a LevelSender die, if a LevelSender doesn't report for a day due to bad cell service it will simply append the previous day to the next days report and will not require a manual fix. The web dashboard has a built in report that sends out the battery levels of the LevelSenders and will show them as red when they drop below 70%, indicating it is a good time to replace the batteries.
+
+A hot-fix was added to the dashboard to allow the addition of data that was missed due to a stop in LevelSender reporting. The hot-fix consists of a [table](https://github.com/richpauloo/cosumnes_shiny/blob/master/clean/dependencies/ls_battery_outages.txt) with the time and date of LevelSender outages and a [table](https://github.com/richpauloo/cosumnes_shiny/blob/master/clean/dependencies/ll_battery_outages.txt) of Levelogger outages. There is another [table](https://github.com/richpauloo/cosumnes_shiny/blob/master/clean/dependencies/ls_recovered_data.txt) with the recovered data between those time periods where a user will have to manually compensate the data to a water elevation and then paste it into the spreadsheet. The program will then read the dates when the LevelSender or Levelogger was not reporting and then pull that data from the recovered data table. 
+
+When a new well is added to the dashboard a user must manually update the elevation [table](https://github.com/richpauloo/cosumnes_shiny/blob/master/clean/dependencies/elev.txt) to add the new LevelSender and Levelogger ID's, the reference point elevation, the depth to water and corresponding compensated water level above the logger and calculate the effective cable length. If any of this info in the table is left out then the water elevation for that LevelSender will come out as NA on the web dashboard and won't come up on the plots. 
+
+# Updating Water Level Data
+_Barometric compensation and water elevation adjustment of water level data for continuous groundwater data_  
+_By Nathan Hatch_  
+
+Data Needed:  
+
+* Pressure data in m H2O downloaded from pressure transducer  
+* Barometric pressure data downloaded from MW-CP1 or MW-5 that has a range that extends at least up to the last point of data collected for well updating  E.g. If data collected from specific well goes up to 6/13/2018 13:30, then barometric data needs to be updated up to 6/13/2018 13:30 or later.  
+* Depth to water measurement taken manually at field site with time of measurement recorded  
+* (Optional, but could make it easier)Length of string the water level pressure transducer is attached to.  
+* MPE: Measuring Point Elevation - the elevation at which to take depth to water measurements (all of this data is already recorded and does not change)  
+ 
+## Barometric Compensation  
+Using the barometric pressure data and the water level pressure data, the water level pressure data needs to be compensated for the barometric pressure which will affect the water level in the well.  
+ 
+Before any data is compensated, check the dates of the data downloaded. If it is off, fix it by inputting the last time to be the time of measurement rounded to the nearest fifteen minutes. Work backwards ensuring fifteen minute intervals.
+
+### Manual Method  
+
+1. Align the raw pressure transducer data by date and time in excel so that adjacent columns have two pressure measurements at the same time (baro & water level).  
+2. In another column, subtract the barometric pressure from the water level pressure for all points. This column is your compensated data that you can use. The levelogger gold records baro in meters and has a 9.5m compensation built in for the lowest barometric pressure at sea level.  
+3. If you are using data from a Levelogger Edge in PSI then you will need to include a 9.5m compensation for sea level pressure. Subtract the 9.5m from the Baro after converting from PSI to meter head using 1 psi = 0.703070 m of water column.
+
+### DataWizard in Levelogger
+
+1. In the Levelogger app, open both the barometric data file and the water level data file.  
+2. Open the Data Wizard, and choose either Basic or Advanced under the Levelogger (Only choose advanced if you have other adjustments you can make such as string length. Otherwise, it is unnecessary steps to go through). Click 'Next'.  
+3. Select the Barometric file to use for compensation and the Water Level file(s) you want to compensate.  
+4. Save the compensated files and export them to a .csv. These are your usable compensated files.  
+
+## Append New Data to the Old  
+Using the manually recorded depth to water (DTW), adjust the transducer data and concatenate it to the existing file to create an updated file of all water levels for that well.  
+ 
+1. Open the pre-existing csv containing the water level data for the well you are updating. Find the last date that there is data for.
+2. Subset the data just downloaded and compensated to include times later than the last pre-existing data point. If there is a gap between the pre-existing last point and the earliest date for downloaded data, leave it by including the dates missing but don't fill in the other columns.  
+3. Append that subset to the pre-existing file simply by copying and pasting.
+4. That should have filled in the first two columns (Date, Level) only for the new entry.
+5. In the third column, in the last row, enter in the manual measurement in the form of surface water level (SWL). To do this, just subtract the DTW recorded from the MPE for that well. 
+ 
+6. Calculate the second to last row in the SWL column using the following formula:
+i.e.
+7. Drag that formula up until the third column is filled for every row that the second column is filled.
+8. Plot the newly appended data with the existing data and look for any erroneous recordings/mistakes/odd features. If you find any problems, go to those data points and see what may be wrong. Check the times of well visits with the times of any strange features. The error may just be a consequence of the transducer being taken out of the well to be downloaded. You may omit an erroneous data entries. Make sure to note any errors or adjustments you make.
+9. Once all errors are understood and fixed if possible, the data should be complete and updated!
+  
+**IMPORTANT** always check units and serial numbers of transducers to make sure you are updating correct well with correct transducer. Some well may also record in ft. When you plot, this error would become obvious.
+ 
