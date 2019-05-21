@@ -2,7 +2,7 @@
 
 This repo contains all the scripts necessary to build an interactive web dashboard for a groundwater observatory in the open source language R.  
 
-As an example, please see the [Cosumnes River Groundwater Observatory](https://richpauloo.shinyapps.io/gw_observatory/), a project of UC Water.  
+As an example, please see the [Cosumnes River Groundwater Observatory](ucwater.org/gw_obs), a project of UC Water.  
 
 ![](dash.png)  
  
