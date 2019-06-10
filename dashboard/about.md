@@ -8,7 +8,9 @@ output:
 
 This R Shiny web application streams real-time data from the South American River Sub-basin Groundwater Observatory, a network of observations wells that transmits data remotely to the cloud.  
 
-The code for this open source project can be found in [this Github repository](https://github.com/richpauloo/cosumnes_shiny).
+The code for this open source project can be found in [this Github repository](https://github.com/richpauloo/cosumnes_shiny).  
+
+A handbook covering alll aspects of the hardware and software for this project is maintained and updated [here](https://github.com/richpauloo/cosumnes_shiny/blob/master/LevelSender_Handbook.pdf).  
 
 ***
 
