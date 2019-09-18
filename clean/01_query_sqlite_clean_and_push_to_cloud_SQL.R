@@ -305,7 +305,10 @@ present <- present %>%
 # change ids so the join can occur
 rows_to_append$id <- paste0("X", rows_to_append$id)     
 
-# append new data and trim overlapping data
+# remove recent data saved in present df that will be replaced by data from rows to append
+present <- filter(present, dt < current)
+# append data from LevelSender sqlite from the past 90 days to insure that if a day of reporting
+# is skipped then the data gets saved to the cloud database later
 complete <- bind_rows(present, rows_to_append) %>% 
   distinct(dt, id, .keep_all = TRUE)
 
