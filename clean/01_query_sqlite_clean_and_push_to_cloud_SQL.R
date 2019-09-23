@@ -464,8 +464,21 @@ gm_auth_configure(path="C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/g
 emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
   pull(email)
 
-# compose and email report
-for(i in 1:length(emails)){
+# compose and email report first email
+for(i in 1){
+  gm_mime() %>% 
+    gm_from("cosumnes.gw.observatory@gmail.com") %>% 
+    gm_to(emails[i]) %>% 
+    gm_subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
+    gm_text_body("") %>% 
+    gm_attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
+    gm_send_message()
+}
+
+1 # select default cosumnesgwobs gmail account
+
+# then, send the rest of the emails 
+for(i in 2:length(emails)){
   gm_mime() %>% 
     gm_from("cosumnes.gw.observatory@gmail.com") %>% 
     gm_to(emails[i]) %>% 
@@ -474,10 +487,8 @@ for(i in 1:length(emails)){
     gm_attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
     gm_send_message()
   
-    Sys.sleep(5)
+  Sys.sleep(5)
 }
-
-1 # select default cosumnesgwobs gmail account
 
 # find low battery
 low_bat_life <- filter(battery_life_df, bat <= 69)
