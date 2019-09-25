@@ -12,6 +12,7 @@ Automagically generated at `r Sys.time()`.
 # Battery Status of Monitoring Units
 
 ```{r, echo = FALSE, message=FALSE, error=FALSE, warning=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
 library(knitr)
 library(kableExtra)
 library(dplyr)

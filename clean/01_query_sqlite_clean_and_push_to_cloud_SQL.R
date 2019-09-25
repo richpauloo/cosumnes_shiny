@@ -457,23 +457,37 @@ Sys.sleep(30)
 suppressPackageStartupMessages(library(gmailr))
 
 # OAuth token
-use_secret_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oauth_gwobs_secret.json")
+gm_auth_configure(path="C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/gmail_oauth_gwobs_secret.json")
+
 
 # email list
 emails <- read_tsv("https://raw.githubusercontent.com/richpauloo/cosumnes_shiny/master/clean/dependencies/email_list.txt") %>% 
   pull(email)
 
-# compose and email report
-for(i in 1:length(emails)){
-  mime() %>% 
-    from("cosumnes.gw.observatory@gmail.com") %>% 
-    to(emails[i]) %>% 
-    subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
-    text_body("") %>% 
-    attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
-    send_message()
+# compose and email report first email
+for(i in 1){
+  gm_mime() %>% 
+    gm_from("cosumnes.gw.observatory@gmail.com") %>% 
+    gm_to(emails[i]) %>% 
+    gm_subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
+    gm_text_body("") %>% 
+    gm_attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
+    gm_send_message()
+}
+
+1 # select default cosumnesgwobs gmail account
+
+# then, send the rest of the emails 
+for(i in 2:length(emails)){
+  gm_mime() %>% 
+    gm_from("cosumnes.gw.observatory@gmail.com") %>% 
+    gm_to(emails[i]) %>% 
+    gm_subject(paste("Groundwater Observatory Report:", Sys.Date())) %>% 
+    gm_text_body("") %>% 
+    gm_attach_file("C:/Users/rpauloo/Documents/GitHub/cosumnes_shiny/clean/02_daily_report.pdf") %>% 
+    gm_send_message()
   
-    Sys.sleep(5)
+  Sys.sleep(5)
 }
 
 # find low battery
