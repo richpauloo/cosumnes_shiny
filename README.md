@@ -1,6 +1,9 @@
 # About 
 
-This repo contains all the scripts necessary to build an interactive web dashboard for a groundwater observatory in the open source language R.  
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3746448.svg)](https://doi.org/10.5281/zenodo.3746448)
+
+
+This repo accompanies the publication ["Low-Cost, Open Source Wireless Sensor Network for Real-Time, Scalable Groundwater Monitoring"](https://www.mdpi.com/2073-4441/12/4/1066) and contains all the scripts necessary to build an interactive web dashboard for a groundwater observatory. 
 
 As an example, please see the [Cosumnes River Groundwater Observatory](http://ucwater.org/gw_obs/), a project of UC Water.  
 
@@ -9,9 +12,9 @@ As an example, please see the [Cosumnes River Groundwater Observatory](http://uc
 
 # Contents
 
-The `clean` folder contains scripts that are automatically run every day at 04:00:00. Together these scripts:  
+The `clean` folder contains scripts that are automatically run every day at 04:00:00 UTC. Together these scripts:  
 
-* retrieve data from [Solinst](https://www.solinst.com/) hardware  
+* extract data from [Solinst](https://www.solinst.com/) hardware  
 * clean and transform the data  (i.e. - adjust for reference elevation, baromaetric pressure)  
 * generate a report of remaining battery life and recent monitoring well data and email that report to a contact list  
 * push a clean version of the database to the cloud  
@@ -23,12 +26,14 @@ The `dashboard` folder contains (among other files), the three files comprising 
 * `server.R`  
 * `ui.R`  
 
-Together, these files build the app.  
+Together, these files build the web dashboard.  
 
 
 # Shiny Server
 
-On shiny server, the app files are located at `/srv/shiny-server/gw_obs`.  
+We use the open source version of [Shiny Server](https://rstudio.com/products/shiny/download-server/) to host the app, which can take place on a cloud computing environment of your choice (e.g., AWS, Azure, Google Cloud).
+
+Project specific note to a future maintainer: on shiny server related to our project, the app files are located at `/srv/shiny-server/gw_obs`.  
 
 
 # Repurposing this code
@@ -39,5 +44,4 @@ If you aim to set of a monitoring well network of your own, this software is fre
 
 You will need a skilled R programmer familiar with Shiny to integrate your hardware with this software.  
 
-On that note, the `log.md` file in the main directory is a daily log of activities during the process of building the app and contains valuable insights for those following in these footsteps.  
-
+The `log.md` file in the main directory is a daily log of activities during the process of building the app and contains valuable insights for those following in these footsteps.  
