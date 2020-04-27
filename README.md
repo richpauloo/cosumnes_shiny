@@ -33,7 +33,7 @@ Together, these files build the web dashboard.
 
 We use the open source version of [Shiny Server](https://rstudio.com/products/shiny/download-server/) to host the app, which can take place on a cloud computing environment of your choice (e.g., AWS, Azure, Google Cloud).
 
-Project specific note to a future maintainer: on shiny server related to our project, the app files are located at `/srv/shiny-server/gw_obs`.  
+Project specific note to a future maintainer: Log in at https://shiny.lawr.ucdavis.edu/rstudio/, and note that the app files are located at `/srv/shiny-server/gw_obs`.  
 
 
 # Repurposing this code
